@@ -68,7 +68,7 @@ Quick reference of the runtime API:
 
 - `fetch(url, options)` — blocking HTTP request. `options.body` supports
   strings and `ArrayBuffer`/`Uint8Array`.
-- `new WebSocket(url, headers?)` — blocking WebSocket. Returns an object with:
+- `WebSocket(url, headers?)` — blocking WebSocket. **Do not use `new`.** Returns an object with:
   - `ws.send(data)` — send text or binary
   - `ws.receive()` — block until the next message arrives
   - `ws.close(code?, reason?)`
@@ -86,3 +86,6 @@ Required plugin interface:
 - `synthesize(text, options)` returning `{ audioContent, format, sampleRate }`
 
 `audioContent` can be an `ArrayBuffer` or `Uint8Array`.
+
+Do not use `Buffer`, `atob`, or `btoa` — the QuickJS runtime does not provide
+them. Decode base64 with the host-provided `base64ToArrayBuffer` instead.

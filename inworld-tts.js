@@ -14,15 +14,9 @@ function uuidv4() {
 }
 
 function base64ToBytes(base64) {
-  if (typeof Buffer !== 'undefined') {
-    return new Uint8Array(Buffer.from(base64, 'base64'));
-  }
-  const binary = atob(base64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
-  }
-  return bytes;
+  // The LNReader QuickJS runtime provides base64ToArrayBuffer; it has no Buffer or atob.
+  const buffer = base64ToArrayBuffer(base64);
+  return new Uint8Array(buffer);
 }
 
 function log(msg) {
@@ -195,7 +189,7 @@ function synthesizeWithRetry(text, voice, model, speed, retries) {
 module.exports.default = {
   id: 'inworld-tts',
   name: 'Inworld AI TTS',
-  version: '1.1.0',
+  version: '1.1.1',
   description:
     'Free TTS using Inworld AI. Synthesized on the native IO thread; parallel chunk synthesis is handled by the LNReader TTS engine.',
   maxCharsPerRequest: 900,

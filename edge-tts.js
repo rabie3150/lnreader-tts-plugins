@@ -139,15 +139,9 @@ function uuidv4() {
 }
 
 function base64ToBytes(base64) {
-  if (typeof Buffer !== 'undefined') {
-    return new Uint8Array(Buffer.from(base64, 'base64'));
-  }
-  const binary = atob(base64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
-  }
-  return bytes;
+  // The LNReader QuickJS runtime provides base64ToArrayBuffer; it has no Buffer or atob.
+  const buffer = base64ToArrayBuffer(base64);
+  return new Uint8Array(buffer);
 }
 
 function getTimestamp() {
@@ -220,7 +214,7 @@ const DEFAULT_VOICES = [
 module.exports.default = {
   id: 'edge-tts',
   name: 'Edge TTS',
-  version: '1.0.0',
+  version: '1.0.1',
   description:
     'Microsoft Edge TTS using direct WebSocket. No proxy or Docker needed.',
   maxCharsPerRequest: 4000,
@@ -271,7 +265,7 @@ module.exports.default = {
       `&Sec-MS-GEC=${secMsGec}` +
       `&Sec-MS-GEC-Version=1-${CHROMIUM_VERSION}`;
 
-    const ws = new WebSocket(url, {
+    const ws = WebSocket(url, {
       'Pragma': 'no-cache',
       'Cache-Control': 'no-cache',
       'Origin': 'chrome-extension://jdiccldimpdaibmpdkjnbmckianbfold',

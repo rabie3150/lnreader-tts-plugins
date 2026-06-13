@@ -26,7 +26,7 @@ function fetchToken() {
 module.exports.default = {
   id: "cartesia-free-tts",
   name: "Cartesia Sonic (Free)",
-  version: "1.0.0",
+  version: "1.0.1",
   description: "Free Cartesia Sonic TTS using public playground tokens. Extremely fast and high quality.",
   maxCharsPerRequest: 3000,
   supportsSpeedControl: true,

@@ -4,7 +4,7 @@
     {
       "id": "inworld-tts",
       "name": "Inworld AI TTS",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "description": "Free TTS using Inworld AI. Chunks are synthesized in parallel by the LNReader TTS engine.",
       "author": "LNReader",
       "url": "inworld-tts.js"
@@ -12,7 +12,7 @@
     {
       "id": "edge-tts",
       "name": "Edge TTS",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "description": "Microsoft Edge TTS using a direct WebSocket connection. No proxy or Docker needed.",
       "author": "LNReader",
       "url": "edge-tts.js"
@@ -20,7 +20,7 @@
     {
       "id": "cartesia-free-tts",
       "name": "Cartesia Sonic (Free)",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "description": "Free Cartesia Sonic TTS using public playground tokens. Extremely fast and high quality.",
       "author": "LNReader",
       "url": "cartesia-free-tts.js"
