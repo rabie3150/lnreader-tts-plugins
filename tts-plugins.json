@@ -1,0 +1,21 @@
+{
+  "name": "LNReader TTS Plugins",
+  "plugins": [
+    {
+      "id": "inworld-tts",
+      "name": "Inworld AI TTS",
+      "version": "1.0.0",
+      "description": "Free TTS using Inworld AI. Splits large text into parallel sub-requests and combines WAV output.",
+      "author": "LNReader",
+      "url": "inworld-tts.js"
+    },
+    {
+      "id": "edge-tts",
+      "name": "Edge TTS (local proxy)",
+      "version": "1.0.0",
+      "description": "Microsoft Edge TTS through a local OpenAI-compatible proxy.",
+      "author": "LNReader",
+      "url": "edge-tts.js"
+    }
+  ]
+}
