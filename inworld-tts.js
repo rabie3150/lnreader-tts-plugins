@@ -195,7 +195,7 @@ function synthesizeWithRetry(text, voice, model, speed, retries) {
 module.exports.default = {
   id: 'inworld-tts',
   name: 'Inworld AI TTS',
-  version: '1.0.0',
+  version: '1.1.0',
   description:
     'Free TTS using Inworld AI. Synthesized on the native IO thread; parallel chunk synthesis is handled by the LNReader TTS engine.',
   maxCharsPerRequest: 900,
