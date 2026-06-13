@@ -189,7 +189,7 @@ function synthesizeWithRetry(text, voice, model, speed, retries) {
 module.exports.default = {
   id: 'inworld-tts',
   name: 'Inworld AI TTS',
-  version: '1.1.1',
+  version: '1.1.2',
   description:
     'Free TTS using Inworld AI. Synthesized on the native IO thread; parallel chunk synthesis is handled by the LNReader TTS engine.',
   maxCharsPerRequest: 900,
@@ -197,13 +197,6 @@ module.exports.default = {
   estimatedCharsPerSecond: 13,
 
   configSchema: [
-    {
-      key: 'voice',
-      type: 'text',
-      label: 'Voice',
-      defaultValue: 'Elliot',
-      description: 'Inworld voice ID (e.g. Elliot, Olivia, Sarah, Hades). The app voice picker also works if getVoices succeeds.',
-    },
     {
       key: 'model',
       type: 'select',
