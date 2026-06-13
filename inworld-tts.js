@@ -103,13 +103,13 @@ function combineWavChunks(chunks) {
   return result;
 }
 
-function synthesizeSingleRequest(text, voice, speed) {
+function synthesizeSingleRequest(text, voice, model, speed) {
   const uid = uuidv4();
 
   const payload = {
     text,
     voiceId: voice,
-    modelId: 'inworld-tts-1.5-max',
+    modelId: model,
     temperature: 1.0,
     applyTextNormalization: 'ON',
     timestampType: 'TIMESTAMP_TYPE_UNSPECIFIED',
@@ -120,7 +120,7 @@ function synthesizeSingleRequest(text, voice, speed) {
     },
   };
 
-  log(`synthesizeSingleRequest textLen=${text.length} voice=${voice} speed=${speed}`);
+  log(`synthesizeSingleRequest textLen=${text.length} voice=${voice} model=${model} speed=${speed}`);
 
   const resp = fetch(API_URL, {
     method: 'POST',
@@ -175,11 +175,11 @@ function synthesizeSingleRequest(text, voice, speed) {
   return combineWavChunks(audioChunks);
 }
 
-function synthesizeWithRetry(text, voice, speed, retries) {
+function synthesizeWithRetry(text, voice, model, speed, retries) {
   let lastErr;
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
-      return synthesizeSingleRequest(text, voice, speed);
+      return synthesizeSingleRequest(text, voice, model, speed);
     } catch (err) {
       lastErr = err;
       if (attempt < retries) {
@@ -202,7 +202,20 @@ module.exports.default = {
   supportsSpeedControl: false,
   estimatedCharsPerSecond: 13,
 
-  configSchema: [],
+  configSchema: [
+    {
+      key: 'model',
+      type: 'select',
+      label: 'Model',
+      defaultValue: 'inworld-tts-1.5-mini',
+      options: [
+        { label: '1.5 mini (fastest streaming)', value: 'inworld-tts-1.5-mini' },
+        { label: '1.5 max (best quality)', value: 'inworld-tts-1.5-max' },
+        { label: 'Inworld TTS 1', value: 'inworld-tts-1' },
+        { label: 'Inworld TTS 2', value: 'inworld-tts-2' },
+      ],
+    },
+  ],
 
   getVoices: function () {
     try {
@@ -233,12 +246,13 @@ module.exports.default = {
     }
 
     const voice = (options && options.pluginSettings && options.pluginSettings.voice) || 'Elliot';
+    const model = (options && options.pluginSettings && options.pluginSettings.model) || 'inworld-tts-1.5-mini';
     const speed = (options && options.speed) || 1.0;
 
-    log(`synthesize START textLen=${text.length} voice=${voice} speed=${speed}`);
+    log(`synthesize START textLen=${text.length} voice=${voice} model=${model} speed=${speed}`);
 
     const processedText = preprocessInworldText(text);
-    const audio = synthesizeWithRetry(processedText, voice, speed, 2);
+    const audio = synthesizeWithRetry(processedText, voice, model, speed, 2);
 
     log(`FINAL audio=${audio.length} bytes`);
     return {
