@@ -9,13 +9,13 @@ const CHROMIUM_VERSION = '130.0.2849.68';
 // Minimal SHA-256 implementation for Sec-MS-GEC token generation.
 function sha256(message) {
   function rotateRight(n, x) {
-    return (x >>> n) | (x << (32 - n));
+    return ((x >>> n) | (x << (32 - n))) >>> 0;
   }
   function choice(x, y, z) {
-    return (x & y) ^ (~x & z);
+    return ((x & y) ^ (~x & z)) >>> 0;
   }
   function majority(x, y, z) {
-    return (x & y) ^ (x & z) ^ (y & z);
+    return ((x & y) ^ (x & z) ^ (y & z)) >>> 0;
   }
 
   const K = [
@@ -53,7 +53,11 @@ function sha256(message) {
   const bitLen = utf8.length * 8;
   utf8.push(0x80);
   while ((utf8.length % 64) !== 56) utf8.push(0);
-  for (let i = 56; i >= 0; i -= 8) utf8.push((bitLen >>> i) & 0xff);
+  const high = Math.floor(bitLen / 0x100000000);
+  utf8.push(
+    (high >>> 24) & 0xff, (high >>> 16) & 0xff, (high >>> 8) & 0xff, high & 0xff,
+    (bitLen >>> 24) & 0xff, (bitLen >>> 16) & 0xff, (bitLen >>> 8) & 0xff, bitLen & 0xff,
+  );
 
   let H = [
     0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
@@ -64,10 +68,11 @@ function sha256(message) {
     const w = new Uint32Array(64);
     for (let i = 0; i < 16; i++) {
       w[i] =
-        (utf8[offset + i * 4] << 24) |
-        (utf8[offset + i * 4 + 1] << 16) |
-        (utf8[offset + i * 4 + 2] << 8) |
-        utf8[offset + i * 4 + 3];
+        ((utf8[offset + i * 4] << 24) |
+          (utf8[offset + i * 4 + 1] << 16) |
+          (utf8[offset + i * 4 + 2] << 8) |
+          utf8[offset + i * 4 + 3]) >>>
+        0;
     }
     for (let i = 16; i < 64; i++) {
       const s0 = rotateRight(7, w[i - 15]) ^ rotateRight(18, w[i - 15]) ^ (w[i - 15] >>> 3);
