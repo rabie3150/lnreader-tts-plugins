@@ -175,9 +175,9 @@ function synthesizeWithRetry(text, voiceIds, outputFormat, speed, apiKey, retrie
 module.exports.default = {
   id: 'kokoro-deepinfra-tts',
   name: 'Kokoro TTS (DeepInfra)',
-  version: '1.0.0',
+  version: '1.0.1',
   description:
-    'Kokoro TTS via DeepInfra. State-of-the-art open-source TTS with multi-language voices, voice blending, and speed control. Requires a DeepInfra API key.',
+    'Kokoro TTS via DeepInfra. State-of-the-art open-source TTS with multi-language voices and speed control. Requires a DeepInfra API key.',
   maxCharsPerRequest: 2000,
   supportsSpeedControl: true,
   estimatedCharsPerSecond: 15,
@@ -189,13 +189,6 @@ module.exports.default = {
       label: 'DeepInfra API Key',
       description: 'Your DeepInfra API key. Get one at https://deepinfra.com/dash/api_keys.',
       required: true,
-    },
-    {
-      key: 'voice',
-      type: 'text',
-      label: 'Default Voice',
-      defaultValue: 'af_bella',
-      description: 'Kokoro voice ID (e.g. af_bella, am_michael, bf_emma). Multiple voices can be blended by separating with commas.',
     },
     {
       key: 'outputFormat',
@@ -241,17 +234,12 @@ module.exports.default = {
 
     const settings = (options && options.pluginSettings) || {};
     const apiKey = settings.apiKey;
-    const defaultVoice = settings.voice || 'af_bella';
-    const voiceOverride = options && options.voiceId ? options.voiceId : defaultVoice;
+    const voiceId = (options && options.voiceId) || 'af_bella';
     const outputFormat = settings.outputFormat || 'mp3';
     const schemaSpeed = typeof settings.speed === 'number' ? settings.speed : 1.0;
     const speed = options && typeof options.speed === 'number' ? options.speed : schemaSpeed;
 
-    // Support voice blending via comma-separated IDs.
-    const voiceIds = voiceOverride.split(',').map(function (id) { return id.trim(); }).filter(function (id) { return id.length > 0; });
-    if (voiceIds.length === 0) {
-      voiceIds.push('af_bella');
-    }
+    const voiceIds = [voiceId];
 
     log(`synthesize START textLen=${text.length} voices=${voiceIds.join(',')} format=${outputFormat} speed=${speed}`);
 

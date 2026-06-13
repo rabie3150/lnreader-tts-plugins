@@ -145,20 +145,13 @@ const DEFAULT_VOICES = [
 module.exports.default = {
   id: 'murf-tts',
   name: 'Murf TTS',
-  version: '1.0.0',
+  version: '1.0.1',
   description: 'Free Murf.ai anonymous TTS. High-fidelity studio voices with no API key required.',
   maxCharsPerRequest: 2000,
   supportsSpeedControl: false,
   estimatedCharsPerSecond: 18,
 
   configSchema: [
-    {
-      key: 'voice',
-      type: 'text',
-      label: 'Voice',
-      defaultValue: 'VM016412139213026OE',
-      description: 'Murf voice ID (e.g. VM016412139213026OE). Use the voice picker to browse all voices.',
-    },
     {
       key: 'style',
       type: 'text',
@@ -410,7 +403,7 @@ module.exports.default = {
     }
 
     const settings = (options && options.pluginSettings) || {};
-    const voiceId = options.voiceId || settings.voice || 'VM016412139213026OE';
+    const voiceId = options.voiceId || 'VM016412139213026OE';
     const style = settings.style || 'Narration';
     const pitch = settings.pitch !== undefined ? settings.pitch : 0;
 

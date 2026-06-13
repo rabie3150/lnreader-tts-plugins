@@ -214,7 +214,7 @@ const DEFAULT_VOICES = [
 module.exports.default = {
   id: 'edge-tts',
   name: 'Edge TTS',
-  version: '1.0.1',
+  version: '1.0.2',
   description:
     'Microsoft Edge TTS using direct WebSocket. No proxy or Docker needed.',
   maxCharsPerRequest: 4000,
@@ -222,12 +222,6 @@ module.exports.default = {
   estimatedCharsPerSecond: 25,
 
   configSchema: [
-    {
-      key: 'voice',
-      type: 'text',
-      label: 'Voice',
-      defaultValue: 'en-US-AvaNeural',
-    },
     {
       key: 'outputFormat',
       type: 'text',
@@ -246,7 +240,7 @@ module.exports.default = {
     }
 
     const settings = options.pluginSettings || {};
-    const voice = settings.voice || 'en-US-AvaNeural';
+    const voice = options.voiceId || 'en-US-AvaNeural';
     const outputFormat = settings.outputFormat || 'audio-24khz-48kbitrate-mono-mp3';
     const speed = options.speed || 1.0;
 

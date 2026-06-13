@@ -2,6 +2,53 @@ const CARTESIA_VERSION = "2026-03-01";
 const PUBLIC_TOKEN_URL = "https://backend.cartesia.ai/access-token/public";
 const API_URL = "https://api.cartesia.ai/tts/bytes";
 
+/**
+ * Cartesia returns a "streaming" WAV where the RIFF and data chunk sizes
+ * are set to 0xFFFFFFFF. Android MediaPlayer (NuPlayer) rejects this as
+ * malformed and throws `Prepare failed.: status=0x1`. Rewrite the sizes
+ * to the actual file/data lengths so standard players accept it.
+ */
+function fixWavHeader(buffer) {
+  const bytes = new Uint8Array(buffer);
+  if (bytes.length < 12) return buffer;
+  if (
+    bytes[0] !== 0x52 || // R
+    bytes[1] !== 0x49 || // I
+    bytes[2] !== 0x46 || // F
+    bytes[3] !== 0x46    // F
+  ) {
+    return buffer;
+  }
+
+  const view = new DataView(buffer);
+  const fileLen = buffer.byteLength;
+
+  // RIFF chunk size = file size - 8 (bytes 4-7, little-endian)
+  view.setUint32(4, fileLen - 8, true);
+
+  // Walk chunks to find the 'data' chunk
+  let offset = 12;
+  while (offset < fileLen - 8) {
+    const chunkId = String.fromCharCode(
+      bytes[offset],
+      bytes[offset + 1],
+      bytes[offset + 2],
+      bytes[offset + 3],
+    );
+    const chunkSize = view.getUint32(offset + 4, true);
+
+    if (chunkId === 'data') {
+      view.setUint32(offset + 4, fileLen - offset - 8, true);
+      break;
+    }
+
+    const chunkTotal = chunkSize + 8;
+    offset += chunkTotal + (chunkTotal & 1);
+  }
+
+  return buffer;
+}
+
 function fetchToken() {
   const resp = fetch(PUBLIC_TOKEN_URL, {
     method: "GET",
@@ -26,7 +73,7 @@ function fetchToken() {
 module.exports.default = {
   id: "cartesia-free-tts",
   name: "Cartesia Sonic (Free)",
-  version: "1.0.1",
+  version: "1.0.2",
   description: "Free Cartesia Sonic TTS using public playground tokens. Extremely fast and high quality.",
   maxCharsPerRequest: 3000,
   supportsSpeedControl: true,
@@ -134,7 +181,7 @@ module.exports.default = {
     }
 
     return {
-      audioContent: resp.arrayBuffer(),
+      audioContent: fixWavHeader(resp.arrayBuffer()),
       format: "wav",
       sampleRate: 44100
     };

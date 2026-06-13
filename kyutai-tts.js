@@ -1083,20 +1083,13 @@ const KYUTAI_VOICES = [
 module.exports.default = {
   id: 'kyutai-tts',
   name: 'Kyutai TTS',
-  version: '1.0.0',
+  version: '1.0.1',
   description: 'Free Kyutai TTS via WebSocket streaming. 200+ voices, no API key required. Returns 24 kHz WAV.',
   maxCharsPerRequest: 5000,
   supportsSpeedControl: false,
   estimatedCharsPerSecond: 18,
 
   configSchema: [
-    {
-      key: 'voice',
-      type: 'text',
-      label: 'Voice',
-      defaultValue: DEFAULT_VOICE_ID,
-      description: 'Kyutai voice ID. Use the voice picker or enter an ID (e.g. expresso_ex04-ex01_narration_001_channel1_605s).',
-    },
     {
       key: 'cfgAlpha',
       type: 'slider',
@@ -1125,7 +1118,7 @@ module.exports.default = {
     }
 
     const settings = options.pluginSettings || {};
-    const voiceInput = options.voiceId || settings.voice || DEFAULT_VOICE_ID;
+    const voiceInput = options.voiceId || DEFAULT_VOICE_ID;
     const cfgAlpha = settings.cfgAlpha !== undefined ? settings.cfgAlpha : 1.5;
 
     log('synthesize START textLen=' + text.length + ' voice=' + voiceInput + ' cfgAlpha=' + cfgAlpha);
