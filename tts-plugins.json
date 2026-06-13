@@ -24,6 +24,38 @@
       "description": "Free Cartesia Sonic TTS using public playground tokens. Extremely fast and high quality.",
       "author": "LNReader",
       "url": "cartesia-free-tts.js"
+    },
+    {
+      "id": "elevenlabs-tts",
+      "name": "ElevenLabs TTS",
+      "version": "1.0.0",
+      "description": "Premium ElevenLabs TTS supporting API-key authenticated mode and hCaptcha anonymous mode. Returns MP3 audio.",
+      "author": "LNReader",
+      "url": "elevenlabs-tts.js"
+    },
+    {
+      "id": "kokoro-deepinfra-tts",
+      "name": "Kokoro TTS (DeepInfra)",
+      "version": "1.0.0",
+      "description": "Kokoro TTS via DeepInfra. State-of-the-art open-source TTS with multi-language voices, voice blending, and speed control. Requires a DeepInfra API key.",
+      "author": "LNReader",
+      "url": "kokoro-deepinfra-tts.js"
+    },
+    {
+      "id": "murf-tts",
+      "name": "Murf TTS",
+      "version": "1.0.0",
+      "description": "Free Murf.ai anonymous TTS with high-fidelity studio voices. No API key required.",
+      "author": "LNReader",
+      "url": "murf-tts.js"
+    },
+    {
+      "id": "kyutai-tts",
+      "name": "Kyutai TTS",
+      "version": "1.0.0",
+      "description": "Free Kyutai TTS via WebSocket streaming. 200+ voices, no API key required. Returns 24 kHz WAV.",
+      "author": "LNReader",
+      "url": "kyutai-tts.js"
     }
   ]
 }
