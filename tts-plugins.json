@@ -5,15 +5,15 @@
       "id": "inworld-tts",
       "name": "Inworld AI TTS",
       "version": "1.0.0",
-      "description": "Free TTS using Inworld AI. Splits large text into parallel sub-requests and combines WAV output.",
+      "description": "Free TTS using Inworld AI. Chunks are synthesized in parallel by the LNReader TTS engine.",
       "author": "LNReader",
       "url": "inworld-tts.js"
     },
     {
       "id": "edge-tts",
-      "name": "Edge TTS (local proxy)",
+      "name": "Edge TTS",
       "version": "1.0.0",
-      "description": "Microsoft Edge TTS through a local OpenAI-compatible proxy.",
+      "description": "Microsoft Edge TTS using a direct WebSocket connection. No proxy or Docker needed.",
       "author": "LNReader",
       "url": "edge-tts.js"
     }

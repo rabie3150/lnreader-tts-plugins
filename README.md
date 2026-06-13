@@ -1,6 +1,6 @@
 # LNReader TTS Plugins
 
-Example plugin repository for LNReader's dynamic TTS system.
+Official plugin repository for LNReader's dynamic TTS system.
 
 ## Plugins
 
@@ -13,31 +13,20 @@ Free cloud TTS that works out of the box.
 - **Speed control:** No
 - **Audio format:** WAV, 24 kHz
 
-### Edge TTS (local proxy)
+The plugin runs inside LNReader's QuickJS runtime. The native TTS engine
+dispatches chunks in parallel (up to 3 concurrent requests), so performance
+remains doze-resistant even though each request is synchronous inside the
+plugin.
 
-Microsoft Edge TTS through a local proxy. Requires running a proxy because the
-QuickJS runtime inside LNReader does not expose WebSocket, which Edge TTS uses
-natively.
+### Edge TTS
+
+Microsoft Edge TTS using a direct WebSocket connection to Microsoft's speech
+service. No local proxy, no Docker, no extra setup.
 
 - **File:** `edge-tts.js`
 - **Max chars:** 4000 per request
 - **Speed control:** Yes
 - **Audio format:** MP3, 24 kHz
-
-#### Running the proxy
-
-```bash
-docker run -d -p 5050:5050 travisvn/openai-edge-tts:latest
-```
-
-Then in LNReader make sure the Edge TTS plugin setting **Proxy URL** is:
-
-```text
-http://localhost:5050/v1/audio/speech
-```
-
-If the proxy is on another machine, use that machine's IP instead of
-`localhost`.
 
 ## Adding this repo to LNReader
 
@@ -49,14 +38,30 @@ If the proxy is on another machine, use that machine's IP instead of
    ```
 4. Save and pull to refresh.
 
+LNReader also automatically adds this repository on first launch so the plugins
+are available without manual configuration.
+
 ## Making your own plugin
 
-See the example files for the required interface:
+Plugins run in LNReader's QuickJS runtime with a synchronous host API:
+
+- `fetch(url, options)` — blocking HTTP request. `options.body` supports
+  strings and `ArrayBuffer`/`Uint8Array`.
+- `new WebSocket(url)` — blocking WebSocket. Returns an object with:
+  - `ws.send(data)` — send text or binary
+  - `ws.receive()` — block until the next message arrives
+  - `ws.close(code?, reason?)`
+- `console.log(...)`
+- `base64ToArrayBuffer(base64)`
+
+Required plugin interface:
 
 - `id`, `name`, `version`, `description`
 - `maxCharsPerRequest`
 - `supportsSpeedControl`
 - `estimatedCharsPerSecond`
 - `configSchema` (optional)
-- `async getVoices(options)`
-- `async synthesize(text, options)` returning `{ audioContent, format, sampleRate }`
+- `getVoices(options)`
+- `synthesize(text, options)` returning `{ audioContent, format, sampleRate }`
+
+`audioContent` can be an `ArrayBuffer` or `Uint8Array`.

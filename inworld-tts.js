@@ -1,7 +1,10 @@
+// Inworld AI TTS plugin for LNReader QuickJS runtime.
+// Designed for synchronous execution: fetch(), resp.text(), and resp.json()
+// are blocking. The native orchestrator runs multiple synthesize() calls in
+// parallel (one per chunk), so this plugin only handles a single chunk.
+
 const API_URL = 'https://inworld.ai/api/create-speech';
 const LIST_VOICES_URL = 'https://inworld.ai/api/list-voices';
-const MAX_CHARS_PER_REQUEST = 900;
-const MAX_CONCURRENT_REQUESTS = 4;
 
 function uuidv4() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
@@ -22,59 +25,6 @@ function base64ToBytes(base64) {
   return bytes;
 }
 
-function preprocessInworldText(text) {
-  return text.replace(/\[([^\[\]]+)\]/g, (match, content) => {
-    const trimmed = content.trim();
-    if (!trimmed) return match;
-    return `[in a robotic system tone] ${trimmed} [in narration tone]`;
-  });
-}
-
-function splitText(text, maxChars) {
-  if (text.length <= maxChars) return [text];
-
-  const chunks = [];
-  const sentences = text.split(/(?<=[.!?])\s+|\n+/);
-
-  let current = '';
-  for (const sentence of sentences) {
-    const trimmed = sentence.trim();
-    if (!trimmed) continue;
-
-    if (trimmed.length > maxChars) {
-      if (current) {
-        chunks.push(current);
-        current = '';
-      }
-      const words = trimmed.split(' ');
-      for (const word of words) {
-        if (word.length > maxChars) {
-          if (current) {
-            chunks.push(current);
-            current = '';
-          }
-          for (let i = 0; i < word.length; i += maxChars) {
-            chunks.push(word.substring(i, i + maxChars));
-          }
-        } else if ((current + ' ' + word).length > maxChars) {
-          if (current) chunks.push(current);
-          current = word;
-        } else {
-          current = current ? current + ' ' + word : word;
-        }
-      }
-    } else if ((current + ' ' + trimmed).length > maxChars) {
-      if (current) chunks.push(current);
-      current = trimmed;
-    } else {
-      current = current ? current + ' ' + trimmed : trimmed;
-    }
-  }
-
-  if (current) chunks.push(current);
-  return chunks;
-}
-
 function log(msg) {
   try {
     const { NativeModules } = require('react-native');
@@ -82,97 +32,12 @@ function log(msg) {
   } catch {}
 }
 
-async function synthesizeSingleRequest(text, voice, speed) {
-  const uid = uuidv4();
-
-  const payload = {
-    text,
-    voiceId: voice,
-    modelId: 'inworld-tts-1.5-max',
-    temperature: 1.0,
-    applyTextNormalization: 'ON',
-    timestampType: 'TIMESTAMP_TYPE_UNSPECIFIED',
-    audioConfig: {
-      audioEncoding: 'LINEAR16',
-      sampleRateHertz: 24000,
-      speakingRate: speed,
-    },
-  };
-
-  log(`synthesizeSingleRequest textLen=${text.length} voice=${voice} speed=${speed}`);
-  log(`PAYLOAD: ${JSON.stringify(payload)}`);
-
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 15000);
-
-  try {
-    const resp = await fetch(API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Cookie': `inworld_uid=${uid}`,
-        'Origin': 'https://inworld.ai',
-        'Referer': 'https://inworld.ai/',
-      },
-      body: JSON.stringify(payload),
-      signal: controller.signal,
-    });
-
-    log(`RESPONSE status=${resp.status}`);
-
-    if (!resp.ok) {
-      const errText = await resp.text();
-      log(`HTTP ERROR ${resp.status}: ${errText.slice(0, 200)}`);
-      throw new Error(`Inworld TTS HTTP ${resp.status}`);
-    }
-
-    const bodyText = await resp.text();
-    const lines = bodyText.split('\n').filter(l => l.trim());
-    log(`NDJSON lines=${lines.length}`);
-
-    const audioChunks = [];
-
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-      try {
-        const data = JSON.parse(line);
-        if (data.error) {
-          throw new Error(data.error.message || JSON.stringify(data.error));
-        }
-        const base64Audio = data.result?.audioContent;
-        if (base64Audio) {
-          audioChunks.push(base64ToBytes(base64Audio));
-        }
-      } catch (e) {
-        log(`LINE${i} PARSE ERROR: ${e.message || e}`);
-      }
-    }
-
-    if (audioChunks.length === 0) {
-      throw new Error('Inworld TTS response missing audioContent');
-    }
-
-    log(`SUCCESS chunks=${audioChunks.length}`);
-
-    if (audioChunks.length === 1) {
-      return audioChunks[0];
-    }
-    return combineWavChunks(audioChunks);
-  } finally {
-    clearTimeout(timeoutId);
-  }
-}
-
-async function synthesizeWithRetry(text, voice, speed, retries = 2) {
-  for (let attempt = 0; attempt <= retries; attempt++) {
-    try {
-      return await synthesizeSingleRequest(text, voice, speed);
-    } catch (err) {
-      if (attempt === retries) throw err;
-      await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
-    }
-  }
-  throw new Error('Unreachable');
+function preprocessInworldText(text) {
+  return text.replace(/\[([^\[\]]+)\]/g, (match, content) => {
+    const trimmed = content.trim();
+    if (!trimmed) return match;
+    return `[in a robotic system tone] ${trimmed} [in narration tone]`;
+  });
 }
 
 function isValidWavHeader(bytes) {
@@ -238,29 +103,118 @@ function combineWavChunks(chunks) {
   return result;
 }
 
+function synthesizeSingleRequest(text, voice, speed) {
+  const uid = uuidv4();
+
+  const payload = {
+    text,
+    voiceId: voice,
+    modelId: 'inworld-tts-1.5-max',
+    temperature: 1.0,
+    applyTextNormalization: 'ON',
+    timestampType: 'TIMESTAMP_TYPE_UNSPECIFIED',
+    audioConfig: {
+      audioEncoding: 'LINEAR16',
+      sampleRateHertz: 24000,
+      speakingRate: speed,
+    },
+  };
+
+  log(`synthesizeSingleRequest textLen=${text.length} voice=${voice} speed=${speed}`);
+
+  const resp = fetch(API_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Cookie': `inworld_uid=${uid}`,
+      'Origin': 'https://inworld.ai',
+      'Referer': 'https://inworld.ai/',
+    },
+    body: JSON.stringify(payload),
+  });
+
+  log(`RESPONSE status=${resp.status}`);
+
+  if (!resp.ok) {
+    const errText = resp.text();
+    log(`HTTP ERROR ${resp.status}: ${errText.slice(0, 200)}`);
+    throw new Error(`Inworld TTS HTTP ${resp.status}`);
+  }
+
+  const bodyText = resp.text();
+  const lines = bodyText.split('\n').filter(l => l.trim());
+  log(`NDJSON lines=${lines.length}`);
+
+  const audioChunks = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    try {
+      const data = JSON.parse(line);
+      if (data.error) {
+        throw new Error(data.error.message || JSON.stringify(data.error));
+      }
+      const base64Audio = data.result?.audioContent;
+      if (base64Audio) {
+        audioChunks.push(base64ToBytes(base64Audio));
+      }
+    } catch (e) {
+      log(`LINE${i} PARSE ERROR: ${e.message || e}`);
+    }
+  }
+
+  if (audioChunks.length === 0) {
+    throw new Error('Inworld TTS response missing audioContent');
+  }
+
+  log(`SUCCESS chunks=${audioChunks.length}`);
+
+  if (audioChunks.length === 1) {
+    return audioChunks[0];
+  }
+  return combineWavChunks(audioChunks);
+}
+
+function synthesizeWithRetry(text, voice, speed, retries) {
+  let lastErr;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return synthesizeSingleRequest(text, voice, speed);
+    } catch (err) {
+      lastErr = err;
+      if (attempt < retries) {
+        // Synchronous sleep using a busy loop (QuickJS has no setTimeout).
+        const until = Date.now() + 1000 * (attempt + 1);
+        while (Date.now() < until) {}
+      }
+    }
+  }
+  throw lastErr;
+}
+
 module.exports.default = {
   id: 'inworld-tts',
   name: 'Inworld AI TTS',
   version: '1.0.0',
   description:
-    'Free TTS using Inworld AI. Splits large text into parallel sub-requests and combines WAV output.',
+    'Free TTS using Inworld AI. Synthesized on the native IO thread; parallel chunk synthesis is handled by the LNReader TTS engine.',
   maxCharsPerRequest: 900,
   supportsSpeedControl: false,
   estimatedCharsPerSecond: 13,
 
   configSchema: [],
 
-  async getVoices(options) {
+  getVoices: function () {
     try {
       const uid = uuidv4();
-      const resp = await fetch(LIST_VOICES_URL, {
+      const resp = fetch(LIST_VOICES_URL, {
         headers: {
           'Cookie': `inworld_uid=${uid}`,
           'Origin': 'https://inworld.ai',
           'Referer': 'https://inworld.ai/',
         },
       });
-      const data = await resp.json();
+      const data = resp.json();
       return (data.voices || []).map(v => ({
         id: v.voiceId,
         name: v.displayName || v.voiceId,
@@ -272,50 +226,23 @@ module.exports.default = {
     }
   },
 
-  async synthesize(text, options) {
+  synthesize: function (text, options) {
     if (!text || !/\p{L}|\p{N}/u.test(text)) {
       log('SKIP empty/non-speakable text');
       throw new Error('No speakable text');
     }
 
-    const voice = (options.pluginSettings?.voice) || 'Elliot';
-    const speed = options.speed || 1.0;
+    const voice = (options && options.pluginSettings && options.pluginSettings.voice) || 'Elliot';
+    const speed = (options && options.speed) || 1.0;
 
     log(`synthesize START textLen=${text.length} voice=${voice} speed=${speed}`);
 
     const processedText = preprocessInworldText(text);
-    const textChunks = splitText(processedText, MAX_CHARS_PER_REQUEST);
-    log(`synthesize split into ${textChunks.length} sub-chunks`);
+    const audio = synthesizeWithRetry(processedText, voice, speed, 2);
 
-    const results = new Array(textChunks.length);
-    const errors = new Array(textChunks.length).fill(null);
-
-    for (let i = 0; i < textChunks.length; i += MAX_CONCURRENT_REQUESTS) {
-      const batch = textChunks.slice(i, i + MAX_CONCURRENT_REQUESTS);
-      await Promise.all(
-        batch.map((chunkText, idx) =>
-          synthesizeWithRetry(chunkText, voice, speed)
-            .then(audio => {
-              results[i + idx] = audio;
-            })
-            .catch(err => {
-              errors[i + idx] = err;
-            }),
-        ),
-      );
-    }
-
-    const firstError = errors.find(e => e !== null);
-    if (firstError) {
-      log(`FAILED: ${firstError.message}`);
-      throw firstError;
-    }
-
-    log(`combining ${results.length} WAV chunks`);
-    const combined = combineWavChunks(results);
-    log(`FINAL combined=${combined.length} bytes`);
+    log(`FINAL audio=${audio.length} bytes`);
     return {
-      audioContent: combined.buffer,
+      audioContent: audio.buffer,
       format: 'wav',
       sampleRate: 24000,
     };

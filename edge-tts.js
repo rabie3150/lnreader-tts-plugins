@@ -1,19 +1,21 @@
-// Microsoft Edge TTS plugin (via an OpenAI-compatible local proxy).
-//
-// Edge TTS itself uses a WebSocket protocol that the current QuickJS runtime
-// does not expose, so this plugin talks to a local HTTP proxy instead.
-//
-// Easiest way to run the proxy:
-//   docker run -d -p 5050:5050 travisvn/openai-edge-tts:latest
-//
-// Then in the plugin settings make sure Proxy URL is:
-//   http://localhost:5050/v1/audio/speech
+// Microsoft Edge TTS plugin using direct WebSocket.
+// No local proxy or Docker needed.
+
+const TRUSTED_CLIENT_TOKEN = '6A5AA1D4EAFF4E9FB37E23D68491D6F4';
+const EDGE_TTS_URL = 'wss://speech.platform.bing.com/consumer/speech/synthesize/readaloud/edge/v1';
 
 function log(msg) {
   try {
     const { NativeModules } = require('react-native');
     NativeModules.TtsStreamingModule.log('EdgeTTS', msg);
   } catch {}
+}
+
+function uuidv4() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = (Math.random() * 16) | 0;
+    return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
+  });
 }
 
 function base64ToBytes(base64) {
@@ -28,49 +30,57 @@ function base64ToBytes(base64) {
   return bytes;
 }
 
-function splitText(text, maxChars) {
-  if (text.length <= maxChars) return [text];
+function getTimestamp() {
+  return new Date().toISOString();
+}
 
-  const chunks = [];
-  const sentences = text.split(/(?<=[.!?])\s+|\n+/);
+function buildConfigMessage(outputFormat) {
+  return (
+    `X-Timestamp: ${getTimestamp()}\r\n` +
+    `Content-Type: application/json; charset=utf-8\r\n` +
+    `Path: speech.config\r\n\r\n` +
+    JSON.stringify({
+      context: {
+        synthesis: {
+          audio: {
+            outputFormat: outputFormat,
+          },
+        },
+      },
+    })
+  );
+}
 
-  let current = '';
-  for (const sentence of sentences) {
-    const trimmed = sentence.trim();
-    if (!trimmed) continue;
+function buildSsmlMessage(text, voice, rate, pitch) {
+  const ssml =
+    `<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='en-US'>` +
+    `<voice name='${voice}'>` +
+    `<prosody rate='${rate}' pitch='${pitch}'>${text}</prosody>` +
+    `</voice></speak>`;
 
-    if (trimmed.length > maxChars) {
-      if (current) {
-        chunks.push(current);
-        current = '';
-      }
-      const words = trimmed.split(' ');
-      for (const word of words) {
-        if (word.length > maxChars) {
-          if (current) {
-            chunks.push(current);
-            current = '';
-          }
-          for (let i = 0; i < word.length; i += maxChars) {
-            chunks.push(word.substring(i, i + maxChars));
-          }
-        } else if ((current + ' ' + word).length > maxChars) {
-          if (current) chunks.push(current);
-          current = word;
-        } else {
-          current = current ? current + ' ' + word : word;
-        }
-      }
-    } else if ((current + ' ' + trimmed).length > maxChars) {
-      if (current) chunks.push(current);
-      current = trimmed;
-    } else {
-      current = current ? current + ' ' + trimmed : trimmed;
-    }
+  return (
+    `X-Timestamp: ${getTimestamp()}\r\n` +
+    `Content-Type: application/ssml+xml\r\n` +
+    `Path: ssml\r\n\r\n` +
+    ssml
+  );
+}
+
+function parseMessage(raw) {
+  const separator = raw.indexOf('\r\n\r\n');
+  if (separator < 0) {
+    return { headers: {}, body: raw };
   }
-
-  if (current) chunks.push(current);
-  return chunks;
+  const headerPart = raw.substring(0, separator);
+  const body = raw.substring(separator + 4);
+  const headers = {};
+  headerPart.split('\r\n').forEach(line => {
+    const idx = line.indexOf(':');
+    if (idx > 0) {
+      headers[line.substring(0, idx).trim().toLowerCase()] = line.substring(idx + 1).trim();
+    }
+  });
+  return { headers, body };
 }
 
 const DEFAULT_VOICES = [
@@ -89,22 +99,15 @@ const DEFAULT_VOICES = [
 
 module.exports.default = {
   id: 'edge-tts',
-  name: 'Edge TTS (local proxy)',
+  name: 'Edge TTS',
   version: '1.0.0',
   description:
-    'Microsoft Edge TTS through a local OpenAI-compatible proxy. ' +
-    'Run: docker run -d -p 5050:5050 travisvn/openai-edge-tts:latest',
+    'Microsoft Edge TTS using direct WebSocket. No proxy or Docker needed.',
   maxCharsPerRequest: 4000,
   supportsSpeedControl: true,
   estimatedCharsPerSecond: 25,
 
   configSchema: [
-    {
-      key: 'proxyUrl',
-      type: 'text',
-      label: 'Proxy URL',
-      defaultValue: 'http://localhost:5050/v1/audio/speech',
-    },
     {
       key: 'voice',
       type: 'text',
@@ -112,37 +115,15 @@ module.exports.default = {
       defaultValue: 'en-US-AvaNeural',
     },
     {
-      key: 'apiKey',
+      key: 'outputFormat',
       type: 'text',
-      label: 'API Key (optional)',
-      defaultValue: '',
+      label: 'Audio format',
+      defaultValue: 'audio-24khz-48kbitrate-mono-mp3',
     },
   ],
 
-  async getVoices(options) {
-    const settings = options.pluginSettings || {};
-    const proxyUrl = settings.proxyUrl || 'http://localhost:5050/v1/audio/speech';
-    const baseUrl = proxyUrl.replace('/audio/speech', '').replace('/v1/audio/speech', '');
-    const voicesUrl = `${baseUrl}/v1/audio/voices`;
-
-    try {
-      const resp = await fetch(voicesUrl);
-      if (!resp.ok) {
-        log(`voices endpoint not available: ${resp.status}`);
-        return DEFAULT_VOICES;
-      }
-      const data = await resp.json();
-      return (data.voices || []).map(v => ({
-        id: v.id,
-        name: v.name || v.id,
-        languages: v.languages || ['en'],
-        gender: v.gender || '',
-        description: v.description || '',
-      }));
-    } catch (e) {
-      log(`getVoices fallback: ${e.message || e}`);
-      return DEFAULT_VOICES;
-    }
+  async getVoices() {
+    return DEFAULT_VOICES;
   },
 
   async synthesize(text, options) {
@@ -151,62 +132,101 @@ module.exports.default = {
     }
 
     const settings = options.pluginSettings || {};
-    const proxyUrl = settings.proxyUrl || 'http://localhost:5050/v1/audio/speech';
     const voice = settings.voice || 'en-US-AvaNeural';
-    const apiKey = settings.apiKey || '';
+    const outputFormat = settings.outputFormat || 'audio-24khz-48kbitrate-mono-mp3';
     const speed = options.speed || 1.0;
+
+    // Map speed 0.5..3.0 to Edge TTS rate string (-50%..+200%)
+    const ratePercent = Math.round((speed - 1.0) * 100);
+    const rate = `${ratePercent >= 0 ? '+' : ''}${ratePercent}%`;
+    const pitch = '+0%';
 
     log(`synthesize START textLen=${text.length} voice=${voice} speed=${speed}`);
 
-    const textChunks = splitText(text, 4000);
-    const results = [];
+    const connectionId = uuidv4().replace(/-/g, '');
+    const url = `${EDGE_TTS_URL}?TrustedClientToken=${TRUSTED_CLIENT_TOKEN}&ConnectionId=${connectionId}`;
 
-    for (const chunk of textChunks) {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000);
+    const ws = new WebSocket(url);
 
-      try {
-        const headers = {
-          'Content-Type': 'application/json',
-        };
-        if (apiKey) {
-          headers['Authorization'] = `Bearer ${apiKey}`;
+    // Wait for open
+    const openMsg = ws.receive();
+    if (openMsg.type !== 'open') {
+      throw new Error(`Edge TTS connection failed: ${openMsg.type} ${openMsg.data || ''}`);
+    }
+
+    // Send config
+    ws.send(buildConfigMessage(outputFormat));
+
+    // Send SSML
+    ws.send(buildSsmlMessage(text, voice, rate, pitch));
+
+    const audioChunks = [];
+
+    while (true) {
+      const msg = ws.receive();
+
+      if (msg.type === 'binary') {
+        let bytes = base64ToBytes(msg.data);
+        // Edge TTS binary frames: [2-byte big-endian header length][header]\r\n[audio]
+        if (bytes.length >= 2) {
+          const headerLen = (bytes[0] << 8) | bytes[1];
+          if (headerLen > 0 && headerLen + 2 <= bytes.length) {
+            const headerEnd = 2 + headerLen;
+            // Drop trailing \r\n between header and audio if present.
+            let audioStart = headerEnd;
+            if (
+              bytes.length > audioStart + 1 &&
+              bytes[audioStart] === 0x0d &&
+              bytes[audioStart + 1] === 0x0a
+            ) {
+              audioStart += 2;
+            }
+            bytes = bytes.slice(audioStart);
+          }
         }
-
-        const resp = await fetch(proxyUrl, {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({
-            input: chunk,
-            voice,
-            response_format: 'mp3',
-            speed,
-          }),
-          signal: controller.signal,
-        });
-
-        if (!resp.ok) {
-          const errText = await resp.text();
-          log(`HTTP ERROR ${resp.status}: ${errText.slice(0, 200)}`);
-          throw new Error(`Edge TTS proxy HTTP ${resp.status}`);
+        if (bytes.length > 0) {
+          audioChunks.push(bytes);
         }
-
-        const arrayBuffer = await resp.arrayBuffer();
-        results.push(new Uint8Array(arrayBuffer));
-      } finally {
-        clearTimeout(timeoutId);
+      } else if (msg.type === 'text') {
+        const parsed = parseMessage(msg.data);
+        const path = parsed.headers['path'] || '';
+        if (path === 'turn.end') {
+          break;
+        }
+        if (path === 'response') {
+          try {
+            const resp = JSON.parse(parsed.body);
+            if (resp?.headers?.['X-RequestId'] && resp?.headers?.['X-StreamId']) {
+              // ignore response metadata
+            }
+          } catch {}
+        }
+      } else if (msg.type === 'close' || msg.type === 'error') {
+        throw new Error(`Edge TTS error: ${msg.data || msg.reason || 'unknown'}`);
       }
     }
 
-    if (results.length === 0) {
-      throw new Error('No audio received from Edge TTS proxy');
+    ws.close();
+
+    if (audioChunks.length === 0) {
+      throw new Error('No audio received from Edge TTS');
     }
 
-    const audio = results[0];
+    // Combine audio chunks. MP3 frames can be concatenated directly.
+    let totalLength = 0;
+    for (const chunk of audioChunks) {
+      totalLength += chunk.length;
+    }
+    const combined = new Uint8Array(totalLength);
+    let offset = 0;
+    for (const chunk of audioChunks) {
+      combined.set(chunk, offset);
+      offset += chunk.length;
+    }
 
-    log(`FINAL audio=${audio.length} bytes`);
+    log(`FINAL audio=${combined.length} bytes`);
     return {
-      audioContent: audio.buffer,
+      audioContent: combined.buffer,
       format: 'mp3',
       sampleRate: 24000,
     };
