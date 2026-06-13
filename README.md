@@ -28,6 +28,15 @@ service. No local proxy, no Docker, no extra setup.
 - **Speed control:** Yes
 - **Audio format:** MP3, 24 kHz
 
+### Cartesia Sonic (Free)
+
+Free Cartesia Sonic TTS using public playground tokens. Extremely fast and high quality.
+
+- **File:** `cartesia-free-tts.js`
+- **Max chars:** 3000 per request
+- **Speed control:** Yes
+- **Audio format:** WAV, 44.1 kHz
+
 ## Adding this repo to LNReader
 
 1. Go to **Settings → TTS → Plugin Sources**.
@@ -43,11 +52,23 @@ are available without manual configuration.
 
 ## Making your own plugin
 
-Plugins run in LNReader's QuickJS runtime with a synchronous host API:
+See the full author guide in the LNReader repo:
+
+👉 [`docs/tts-plugin-author-guide.md`](https://github.com/rabie3150/lnreader/blob/main/docs/tts-plugin-author-guide.md)
+
+The guide covers:
+
+- Required plugin interface (`id`, `name`, `version`, `synthesize`, etc.)
+- The synchronous QuickJS runtime API (`fetch`, `WebSocket`, `base64ToArrayBuffer`, etc.)
+- Parameter schema (`configSchema`) with all supported UI types
+- Conditional visibility, validation, and defaults
+- Packaging, manifest format, and publishing on GitHub
+
+Quick reference of the runtime API:
 
 - `fetch(url, options)` — blocking HTTP request. `options.body` supports
   strings and `ArrayBuffer`/`Uint8Array`.
-- `new WebSocket(url)` — blocking WebSocket. Returns an object with:
+- `new WebSocket(url, headers?)` — blocking WebSocket. Returns an object with:
   - `ws.send(data)` — send text or binary
   - `ws.receive()` — block until the next message arrives
   - `ws.close(code?, reason?)`

@@ -204,17 +204,17 @@ function parseMessage(raw) {
 }
 
 const DEFAULT_VOICES = [
-  { id: 'en-US-AvaNeural', name: 'Ava (US English)', languages: ['en-us'], gender: 'Female' },
-  { id: 'en-US-AndrewNeural', name: 'Andrew (US English)', languages: ['en-us'], gender: 'Male' },
-  { id: 'en-GB-SoniaNeural', name: 'Sonia (UK English)', languages: ['en-gb'], gender: 'Female' },
-  { id: 'en-GB-RyanNeural', name: 'Ryan (UK English)', languages: ['en-gb'], gender: 'Male' },
-  { id: 'ja-JP-NanamiNeural', name: 'Nanami (Japanese)', languages: ['ja-jp'], gender: 'Female' },
-  { id: 'ja-JP-KeitaNeural', name: 'Keita (Japanese)', languages: ['ja-jp'], gender: 'Male' },
-  { id: 'ko-KR-SunHiNeural', name: 'Sun-Hi (Korean)', languages: ['ko-kr'], gender: 'Female' },
-  { id: 'zh-CN-XiaoxiaoNeural', name: 'Xiaoxiao (Chinese)', languages: ['zh-cn'], gender: 'Female' },
-  { id: 'es-ES-ElviraNeural', name: 'Elvira (Spanish)', languages: ['es-es'], gender: 'Female' },
-  { id: 'fr-FR-DeniseNeural', name: 'Denise (French)', languages: ['fr-fr'], gender: 'Female' },
-  { id: 'de-DE-KatjaNeural', name: 'Katja (German)', languages: ['de-de'], gender: 'Female' },
+  { id: 'en-US-AvaNeural', name: 'Ava (US English)', languages: ['en-us'], gender: 'female' },
+  { id: 'en-US-AndrewNeural', name: 'Andrew (US English)', languages: ['en-us'], gender: 'male' },
+  { id: 'en-GB-SoniaNeural', name: 'Sonia (UK English)', languages: ['en-gb'], gender: 'female' },
+  { id: 'en-GB-RyanNeural', name: 'Ryan (UK English)', languages: ['en-gb'], gender: 'male' },
+  { id: 'ja-JP-NanamiNeural', name: 'Nanami (Japanese)', languages: ['ja-jp'], gender: 'female' },
+  { id: 'ja-JP-KeitaNeural', name: 'Keita (Japanese)', languages: ['ja-jp'], gender: 'male' },
+  { id: 'ko-KR-SunHiNeural', name: 'Sun-Hi (Korean)', languages: ['ko-kr'], gender: 'female' },
+  { id: 'zh-CN-XiaoxiaoNeural', name: 'Xiaoxiao (Chinese)', languages: ['zh-cn'], gender: 'female' },
+  { id: 'es-ES-ElviraNeural', name: 'Elvira (Spanish)', languages: ['es-es'], gender: 'female' },
+  { id: 'fr-FR-DeniseNeural', name: 'Denise (French)', languages: ['fr-fr'], gender: 'female' },
+  { id: 'de-DE-KatjaNeural', name: 'Katja (German)', languages: ['de-de'], gender: 'female' },
 ];
 
 module.exports.default = {

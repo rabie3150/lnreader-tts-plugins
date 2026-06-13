@@ -204,6 +204,13 @@ module.exports.default = {
 
   configSchema: [
     {
+      key: 'voice',
+      type: 'text',
+      label: 'Voice',
+      defaultValue: 'Elliot',
+      description: 'Inworld voice ID (e.g. Elliot, Olivia, Sarah, Hades). The app voice picker also works if getVoices succeeds.',
+    },
+    {
       key: 'model',
       type: 'select',
       label: 'Model',
@@ -245,9 +252,10 @@ module.exports.default = {
       throw new Error('No speakable text');
     }
 
-    const voice = (options && options.pluginSettings && options.pluginSettings.voice) || 'Elliot';
-    const model = (options && options.pluginSettings && options.pluginSettings.model) || 'inworld-tts-1.5-mini';
-    const speed = (options && options.speed) || 1.0;
+    const settings = (options && options.pluginSettings) || {};
+    const voice = options.voiceId || settings.voice || 'Elliot';
+    const model = settings.model || 'inworld-tts-1.5-mini';
+    const speed = options.speed || 1.0;
 
     log(`synthesize START textLen=${text.length} voice=${voice} model=${model} speed=${speed}`);
 
