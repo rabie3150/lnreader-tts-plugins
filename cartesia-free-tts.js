@@ -73,10 +73,10 @@ async function fetchToken() {
 module.exports.default = {
   id: "cartesia-free-tts",
   name: "Cartesia Sonic (Free)",
-  version: "1.0.3",
+  version: "1.0.4",
   description: "Free Cartesia Sonic TTS using public playground tokens. Extremely fast and high quality.",
   maxCharsPerRequest: 3000,
-  supportsSpeedControl: true,
+  supportsSpeedControl: false,
   estimatedCharsPerSecond: 18,
 
   configSchema: [
@@ -143,7 +143,6 @@ module.exports.default = {
     const settings = options.pluginSettings || {};
     const model = settings.model || "sonic-3";
     const voiceId = options.voiceId || settings.voice || "694f9389-aac1-45b6-b726-9d9369183238";
-    const speed = options.speed || 1.0;
 
     // We must fetch a fresh token for every request because they expire in 60s
     // and we have no global state to cache them across plugin invocations easily.
@@ -157,8 +156,7 @@ module.exports.default = {
         container: "wav",
         encoding: "pcm_s16le",
         sample_rate: 44100
-      },
-      speed: speed
+      }
     };
 
     if (settings.emotion && settings.emotion !== "none") {
