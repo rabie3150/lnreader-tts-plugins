@@ -8,10 +8,7 @@ const SAMPLE_RATE = 24000;
 const DEFAULT_VOICE_ID = 'expresso_ex04-ex01_narration_001_channel1_605s';
 
 function log(msg) {
-  try {
-    const { NativeModules } = require('react-native');
-    NativeModules.TtsStreamingModule.log('Kyutai', msg);
-  } catch {}
+  console.log('[Kyutai]', msg);
 }
 
 function uuidv4() {
@@ -22,8 +19,78 @@ function uuidv4() {
 }
 
 function base64ToBytes(base64) {
-  const buffer = base64ToArrayBuffer(base64);
-  return new Uint8Array(buffer);
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
+function openWebSocket(url, headers) {
+  return new Promise((resolve, reject) => {
+    let openTimer = null;
+    const ws = new WebSocket(url, [], headers ? { headers } : undefined);
+    ws.binaryType = 'arraybuffer';
+    const buffer = [];
+    const pending = [];
+
+    const pushMessage = msg => {
+      if (pending.length > 0) {
+        pending.shift().resolve(msg);
+      } else {
+        buffer.push(msg);
+      }
+    };
+
+    ws.onopen = () => {
+      clearTimeout(openTimer);
+      ws.onerror = () => pushMessage({ type: 'error', reason: 'WebSocket error' });
+      ws.onclose = () => pushMessage({ type: 'close' });
+      resolve(ws);
+    };
+
+    ws.onerror = () => {
+      clearTimeout(openTimer);
+      reject(new Error('WebSocket error'));
+      try { ws.close(); } catch {}
+    };
+
+    ws.onclose = () => {
+      clearTimeout(openTimer);
+      reject(new Error('WebSocket closed before open'));
+    };
+
+    ws.onmessage = event => {
+      const isString = typeof event.data === 'string';
+      pushMessage({ type: isString ? 'text' : 'binary', data: event.data });
+    };
+
+    ws._kyutaiBuffer = buffer;
+    ws._kyutaiPending = pending;
+
+    openTimer = setTimeout(() => {
+      reject(new Error('WebSocket open timeout'));
+      try { ws.close(); } catch {}
+    }, 30000);
+  });
+}
+
+async function wsReceive(ws, timeoutMs) {
+  if (ws._kyutaiBuffer.length > 0) {
+    return ws._kyutaiBuffer.shift();
+  }
+  return new Promise(resolve => {
+    const timer = setTimeout(() => resolve({ type: 'timeout' }), timeoutMs);
+    ws._kyutaiPending.push({
+      resolve: msg => {
+        clearTimeout(timer);
+        resolve(msg);
+      },
+    });
+  });
+}
+
+function wsSend(ws, data) {
+  ws.send(data);
 }
 
 function utf8BytesToString(bytes, start, length) {
@@ -368,7 +435,7 @@ function encodeURIComponentShim(str) {
   return result;
 }
 
-function synthesizeSingleRequest(text, voiceId, cfgAlpha) {
+async function synthesizeSingleRequest(text, voiceId, cfgAlpha) {
   const requestId = uuidv4().slice(0, 8);
   const encodedVoice = encodeURIComponentShim(voiceId);
   const url = WS_URL +
@@ -380,35 +447,27 @@ function synthesizeSingleRequest(text, voiceId, cfgAlpha) {
 
   log('connecting to ' + url);
 
-  const ws = WebSocket(url, {
-    'Origin': ORIGIN,
-  });
+  const ws = await openWebSocket(url, { Origin: ORIGIN });
 
-  const openMsg = ws.receive(30000);
-  if (openMsg.type !== 'open') {
-    throw new Error('Kyutai WebSocket failed to open: ' + openMsg.type + ' ' + (openMsg.data || ''));
-  }
-
-  ws.send(packTextMessage(text));
-  ws.send(packEosMessage());
+  wsSend(ws, packTextMessage(text));
+  wsSend(ws, packEosMessage());
 
   const audioMessages = [];
   let receivedAny = false;
   let timeoutMs = 30000; // Wait longer for the first audio chunk.
 
   while (true) {
-    const msg = ws.receive(timeoutMs);
+    const msg = await wsReceive(ws, timeoutMs);
     if (msg.type === 'binary') {
       receivedAny = true;
       timeoutMs = 1500; // After first chunk, expect chunks back-to-back.
-      const bytes = base64ToBytes(msg.data);
-      audioMessages.push(bytes);
+      audioMessages.push(new Uint8Array(msg.data));
     } else if (msg.type === 'text') {
       // ignore metadata frames
     } else if (msg.type === 'close') {
       break;
     } else if (msg.type === 'error') {
-      throw new Error('Kyutai WebSocket error: ' + (msg.data || msg.reason || 'unknown'));
+      throw new Error('Kyutai WebSocket error: ' + (msg.reason || 'unknown'));
     } else if (msg.type === 'timeout') {
       if (receivedAny) {
         // No new audio for timeoutMs; assume end of stream.
@@ -475,17 +534,16 @@ function synthesizeSingleRequest(text, voiceId, cfgAlpha) {
   };
 }
 
-function synthesizeWithRetry(text, voiceId, cfgAlpha, retries) {
+async function synthesizeWithRetry(text, voiceId, cfgAlpha, retries) {
   let lastErr;
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
-      return synthesizeSingleRequest(text, voiceId, cfgAlpha);
+      return await synthesizeSingleRequest(text, voiceId, cfgAlpha);
     } catch (err) {
       lastErr = err;
       log('synthesize attempt ' + attempt + ' failed: ' + (err.message || err));
       if (attempt < retries) {
-        const until = Date.now() + 1000 * (attempt + 1);
-        while (Date.now() < until) {}
+        await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
       }
     }
   }
@@ -1083,7 +1141,7 @@ const KYUTAI_VOICES = [
 module.exports.default = {
   id: 'kyutai-tts',
   name: 'Kyutai TTS',
-  version: '1.0.1',
+  version: '1.0.2',
   description: 'Free Kyutai TTS via WebSocket streaming. 200+ voices, no API key required. Returns 24 kHz WAV.',
   maxCharsPerRequest: 5000,
   supportsSpeedControl: false,
@@ -1102,7 +1160,7 @@ module.exports.default = {
     },
   ],
 
-  getVoices: function () {
+  getVoices: async function () {
     return KYUTAI_VOICES.map(v => ({
       id: v.id,
       name: v.name,
@@ -1112,7 +1170,7 @@ module.exports.default = {
     }));
   },
 
-  synthesize: function (text, options) {
+  synthesize: async function (text, options) {
     if (!text || !/\p{L}|\p{N}/u.test(text)) {
       throw new Error('No speakable text');
     }
@@ -1124,9 +1182,13 @@ module.exports.default = {
     log('synthesize START textLen=' + text.length + ' voice=' + voiceInput + ' cfgAlpha=' + cfgAlpha);
 
     const voiceId = resolveVoiceId(voiceInput);
-    const audio = synthesizeWithRetry(text, voiceId, cfgAlpha, 2);
+    const audio = await synthesizeWithRetry(text, voiceId, cfgAlpha, 2);
 
     log('FINAL audio=' + audio.audioContent.byteLength + ' bytes');
-    return audio;
+    return {
+      audioContent: audio.audioContent,
+      format: audio.format,
+      sampleRate: audio.sampleRate,
+    };
   },
 };

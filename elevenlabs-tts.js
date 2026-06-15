@@ -1,4 +1,4 @@
-// ElevenLabs TTS plugin for LNReader QuickJS runtime.
+// ElevenLabs TTS plugin for LNReader React Native JS runtime.
 // Supports authenticated mode (API key) and anonymous mode (hCaptcha token).
 // The /stream/with-timestamps endpoint returns NDJSON lines containing
 // audio_base64 fields; we concatenate them into a single MP3 byte stream.
@@ -15,13 +15,18 @@ const HARDCODED_VOICES = [
 ];
 
 function base64ToBytes(base64) {
-  const buffer = base64ToArrayBuffer(base64);
-  return new Uint8Array(buffer);
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
 }
 
 function sleep(ms) {
-  const until = Date.now() + ms;
-  while (Date.now() < until) {}
+  return new Promise(function (resolve) {
+    setTimeout(resolve, ms);
+  });
 }
 
 function parseNdjsonAudio(bodyText) {
@@ -66,7 +71,7 @@ function parseNdjsonAudio(bodyText) {
   return combined;
 }
 
-function synthesizeAuthenticated(text, voiceId, settings, speed) {
+async function synthesizeAuthenticated(text, voiceId, settings, speed) {
   const url = 'https://api.elevenlabs.io/v1/text-to-speech/' + voiceId + '/stream/with-timestamps';
   const headers = {
     'Accept': '*/*',
@@ -82,21 +87,21 @@ function synthesizeAuthenticated(text, voiceId, settings, speed) {
 
   console.log('ElevenLabs authenticated request: voice=' + voiceId + ' model=' + payload.model_id + ' speed=' + speed);
 
-  const resp = fetch(url, {
+  const resp = await fetch(url, {
     method: 'POST',
     headers: headers,
     body: JSON.stringify(payload),
   });
 
   if (!resp.ok) {
-    const errText = resp.text();
+    const errText = await resp.text();
     throw new Error('ElevenLabs HTTP ' + resp.status + ': ' + errText.slice(0, 300));
   }
 
-  return parseNdjsonAudio(resp.text());
+  return parseNdjsonAudio(await resp.text());
 }
 
-function synthesizeAnonymous(text, voiceId, settings, speed) {
+async function synthesizeAnonymous(text, voiceId, settings, speed) {
   const hcaptchaToken = settings.hcaptchaToken || '';
 
   const url = 'https://api.elevenlabs.io/v1/text-to-speech/' + voiceId + '/stream/with-timestamps/anonymous';
@@ -127,33 +132,33 @@ function synthesizeAnonymous(text, voiceId, settings, speed) {
 
   console.log('ElevenLabs anonymous request: voice=' + voiceId + ' model=' + payload.model_id + ' speed=' + speed);
 
-  const resp = fetch(url, {
+  const resp = await fetch(url, {
     method: 'POST',
     headers: headers,
     body: JSON.stringify(payload),
   });
 
   if (!resp.ok) {
-    const errText = resp.text();
+    const errText = await resp.text();
     throw new Error('ElevenLabs HTTP ' + resp.status + ': ' + errText.slice(0, 300));
   }
 
-  return parseNdjsonAudio(resp.text());
+  return parseNdjsonAudio(await resp.text());
 }
 
-function synthesizeWithRetry(text, voiceId, settings, speed, retries) {
+async function synthesizeWithRetry(text, voiceId, settings, speed, retries) {
   let lastErr;
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
       if (settings.apiKey) {
-        return synthesizeAuthenticated(text, voiceId, settings, speed);
+        return await synthesizeAuthenticated(text, voiceId, settings, speed);
       }
-      return synthesizeAnonymous(text, voiceId, settings, speed);
+      return await synthesizeAnonymous(text, voiceId, settings, speed);
     } catch (err) {
       lastErr = err;
       if (attempt < retries) {
         console.log('ElevenLabs synthesis attempt ' + (attempt + 1) + ' failed, retrying...');
-        sleep(1000 * (attempt + 1));
+        await sleep(1000 * (attempt + 1));
       }
     }
   }
@@ -163,7 +168,7 @@ function synthesizeWithRetry(text, voiceId, settings, speed, retries) {
 module.exports.default = {
   id: 'elevenlabs-tts',
   name: 'ElevenLabs TTS',
-  version: '1.0.0',
+  version: '1.0.1',
   description: 'Premium ElevenLabs TTS supporting API-key authenticated mode and hCaptcha anonymous mode. Returns MP3 audio.',
   maxCharsPerRequest: 5000,
   supportsSpeedControl: true,
@@ -200,11 +205,11 @@ module.exports.default = {
     },
   ],
 
-  getVoices: function (options) {
+  getVoices: async function (options) {
     const settings = (options && options.pluginSettings) || {};
     if (settings.apiKey) {
       try {
-        const resp = fetch('https://api.elevenlabs.io/v1/voices?show_legacy=true', {
+        const resp = await fetch('https://api.elevenlabs.io/v1/voices?show_legacy=true', {
           headers: {
             'accept': 'application/json',
             'xi-api-key': settings.apiKey,
@@ -213,7 +218,7 @@ module.exports.default = {
         if (!resp.ok) {
           throw new Error('HTTP ' + resp.status);
         }
-        const data = resp.json();
+        const data = await resp.json();
         const voices = [];
         const voicesArr = data.voices || [];
         for (let i = 0; i < voicesArr.length; i++) {
@@ -246,7 +251,7 @@ module.exports.default = {
     return HARDCODED_VOICES;
   },
 
-  synthesize: function (text, options) {
+  synthesize: async function (text, options) {
     if (!text || !/\p{L}|\p{N}/u.test(text)) {
       throw new Error('No speakable text');
     }
@@ -257,7 +262,7 @@ module.exports.default = {
 
     console.log('ElevenLabs synthesize START textLen=' + text.length + ' voice=' + voiceId + ' speed=' + speed);
 
-    const audio = synthesizeWithRetry(text, voiceId, settings, speed, 2);
+    const audio = await synthesizeWithRetry(text, voiceId, settings, speed, 2);
 
     console.log('ElevenLabs synthesize SUCCESS bytes=' + audio.length);
 

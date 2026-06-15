@@ -1,4 +1,4 @@
-// Murf.ai Anonymous TTS plugin for LNReader QuickJS runtime.
+// Murf.ai Anonymous TTS plugin for LNReader React Native JS runtime.
 // Uses Murf's free anonymous endpoint. No API key required.
 
 const ENDPOINT = 'https://murf.ai/Prod/anonymous-tts/audio';
@@ -22,10 +22,7 @@ function getHeaders() {
 }
 
 function log(msg) {
-  try {
-    const { NativeModules } = require('react-native');
-    NativeModules.TtsStreamingModule.log('MurfTTS', msg);
-  } catch {}
+  console.log('MurfTTS', msg);
 }
 
 function encodeQueryParam(obj) {
@@ -51,11 +48,17 @@ function isValidMp3(bytes) {
 }
 
 function base64ToBytes(base64) {
-  const buffer = base64ToArrayBuffer(base64);
-  return new Uint8Array(buffer);
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
 }
 
-function synthesizeSingleRequest(text, voiceId, style, pitch) {
+async function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function synthesizeSingleRequest(text, voiceId, style, pitch) {
   const params = {
     text: text,
     voiceId: voiceId,
@@ -68,7 +71,7 @@ function synthesizeSingleRequest(text, voiceId, style, pitch) {
   const url = ENDPOINT + '?' + encodeQueryParam(params);
   log(`GET ${url.slice(0, 120)}...`);
 
-  const resp = fetch(url, {
+  const resp = await fetch(url, {
     method: 'GET',
     headers: getHeaders(),
   });
@@ -76,17 +79,17 @@ function synthesizeSingleRequest(text, voiceId, style, pitch) {
   log(`RESPONSE status=${resp.status}`);
 
   if (!resp.ok) {
-    const errText = resp.text();
+    const errText = await resp.text();
     log(`HTTP ERROR ${resp.status}: ${errText.slice(0, 200)}`);
     throw new Error(`Murf TTS HTTP ${resp.status}`);
   }
 
   // Murf usually returns binary MP3, but the Python agent had a data:audio fallback.
-  const contentType = (resp.headers && resp.headers['Content-Type']) || '';
+  const contentType = (resp.headers && resp.headers.get('Content-Type')) || '';
   let audio;
 
   if (typeof contentType === 'string' && contentType.indexOf('application/json') >= 0) {
-    const bodyText = resp.text();
+    const bodyText = await resp.text();
     if (bodyText.indexOf('data:audio') === 0) {
       const b64 = bodyText.split(',')[1];
       if (!b64) {
@@ -97,7 +100,7 @@ function synthesizeSingleRequest(text, voiceId, style, pitch) {
       throw new Error('Murf TTS returned unexpected JSON: ' + bodyText.slice(0, 200));
     }
   } else {
-    audio = new Uint8Array(resp.arrayBuffer());
+    audio = new Uint8Array(await resp.arrayBuffer());
   }
 
   if (!audio || audio.length === 0) {
@@ -112,16 +115,15 @@ function synthesizeSingleRequest(text, voiceId, style, pitch) {
   return audio;
 }
 
-function synthesizeWithRetry(text, voiceId, style, pitch, retries) {
+async function synthesizeWithRetry(text, voiceId, style, pitch, retries) {
   let lastErr;
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
-      return synthesizeSingleRequest(text, voiceId, style, pitch);
+      return await synthesizeSingleRequest(text, voiceId, style, pitch);
     } catch (err) {
       lastErr = err;
       if (attempt < retries) {
-        const until = Date.now() + 1000 * (attempt + 1);
-        while (Date.now() < until) {}
+        await sleep(1000 * (attempt + 1));
       }
     }
   }
@@ -145,7 +147,7 @@ const DEFAULT_VOICES = [
 module.exports.default = {
   id: 'murf-tts',
   name: 'Murf TTS',
-  version: '1.0.1',
+  version: '1.0.2',
   description: 'Free Murf.ai anonymous TTS. High-fidelity studio voices with no API key required.',
   maxCharsPerRequest: 2000,
   supportsSpeedControl: false,
@@ -171,7 +173,7 @@ module.exports.default = {
     },
   ],
 
-  getVoices: function () {
+  getVoices: async function () {
     // Full voice catalog scraped from Murf.ai. Kept inline because there is no public API list endpoint.
     return [
       { id: 'V016093953653282U4', name: 'Hannah', languages: ['en-us'], gender: 'female' },
@@ -396,7 +398,7 @@ module.exports.default = {
     ];
   },
 
-  synthesize: function (text, options) {
+  synthesize: async function (text, options) {
     if (!text || !/\p{L}|\p{N}/u.test(text)) {
       log('SKIP empty/non-speakable text');
       throw new Error('No speakable text');
@@ -409,7 +411,7 @@ module.exports.default = {
 
     log(`synthesize START textLen=${text.length} voice=${voiceId} style=${style} pitch=${pitch}`);
 
-    const audio = synthesizeWithRetry(text, voiceId, style, pitch, 2);
+    const audio = await synthesizeWithRetry(text, voiceId, style, pitch, 2);
 
     return {
       audioContent: audio.buffer,

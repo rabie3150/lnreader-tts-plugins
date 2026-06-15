@@ -12,7 +12,7 @@
     {
       "id": "edge-tts",
       "name": "Edge TTS",
-      "version": "1.0.3",
+      "version": "1.0.4",
       "description": "Microsoft Edge TTS using a direct WebSocket connection. No proxy or Docker needed.",
       "author": "LNReader",
       "url": "edge-tts.js"
@@ -28,7 +28,7 @@
     {
       "id": "elevenlabs-tts",
       "name": "ElevenLabs TTS",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "description": "Premium ElevenLabs TTS supporting API-key authenticated mode and hCaptcha anonymous mode. Returns MP3 audio.",
       "author": "LNReader",
       "url": "elevenlabs-tts.js"
@@ -36,7 +36,7 @@
     {
       "id": "kokoro-deepinfra-tts",
       "name": "Kokoro TTS (DeepInfra)",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "description": "Kokoro TTS via DeepInfra. State-of-the-art open-source TTS with multi-quality voices and speed control. Requires a DeepInfra API key.",
       "author": "LNReader",
       "url": "kokoro-deepinfra-tts.js"
@@ -44,7 +44,7 @@
     {
       "id": "murf-tts",
       "name": "Murf TTS",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "description": "Free Murf.ai anonymous TTS with high-fidelity studio voices. No API key required.",
       "author": "LNReader",
       "url": "murf-tts.js"
@@ -52,7 +52,7 @@
     {
       "id": "kyutai-tts",
       "name": "Kyutai TTS",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "description": "Free Kyutai TTS via WebSocket streaming. 200+ voices, no API key required. Returns 24 kHz WAV.",
       "author": "LNReader",
       "url": "kyutai-tts.js"

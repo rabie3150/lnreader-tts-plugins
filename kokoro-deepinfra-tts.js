@@ -1,4 +1,4 @@
-// Kokoro TTS (DeepInfra) plugin for LNReader QuickJS runtime.
+// Kokoro TTS (DeepInfra) plugin for LNReader JS runtime.
 // Uses the DeepInfra inference endpoint for the hexgrad/Kokoro-82M model.
 // Supports speed control and multiple output formats.
 
@@ -65,15 +65,16 @@ const VOICES = [
 ];
 
 function log(msg) {
-  try {
-    const { NativeModules } = require('react-native');
-    NativeModules.TtsStreamingModule.log('KokoroDeepInfra', msg);
-  } catch {}
+  console.log('[KokoroDeepInfra]', msg);
 }
 
 function base64ToBytes(base64) {
-  const buffer = base64ToArrayBuffer(base64);
-  return new Uint8Array(buffer);
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
 }
 
 function langToCode(language) {
@@ -102,11 +103,12 @@ function formatFromOutputFormat(outputFormat) {
 }
 
 function sleepMs(ms) {
-  const until = Date.now() + ms;
-  while (Date.now() < until) {}
+  return new Promise(function (resolve) {
+    setTimeout(resolve, ms);
+  });
 }
 
-function synthesizeSingleRequest(text, voiceIds, outputFormat, speed, apiKey) {
+async function synthesizeSingleRequest(text, voiceIds, outputFormat, speed, apiKey) {
   const payload = {
     text: text,
     output_format: outputFormat,
@@ -123,7 +125,7 @@ function synthesizeSingleRequest(text, voiceIds, outputFormat, speed, apiKey) {
 
   log(`synthesizeSingleRequest textLen=${text.length} voices=${voiceIds.join(',')} format=${outputFormat} speed=${speed}`);
 
-  const resp = fetch(API_URL, {
+  const resp = await fetch(API_URL, {
     method: 'POST',
     headers: headers,
     body: JSON.stringify(payload),
@@ -132,12 +134,12 @@ function synthesizeSingleRequest(text, voiceIds, outputFormat, speed, apiKey) {
   log(`RESPONSE status=${resp.status}`);
 
   if (!resp.ok) {
-    const errText = resp.text();
+    const errText = await resp.text();
     log(`HTTP ERROR ${resp.status}: ${errText.slice(0, 200)}`);
     throw new Error(`Kokoro TTS HTTP ${resp.status}: ${errText.slice(0, 200)}`);
   }
 
-  const result = resp.json();
+  const result = await resp.json();
   let audioB64 = result.audio;
 
   if (!audioB64) {
@@ -157,15 +159,15 @@ function synthesizeSingleRequest(text, voiceIds, outputFormat, speed, apiKey) {
   return audioBytes;
 }
 
-function synthesizeWithRetry(text, voiceIds, outputFormat, speed, apiKey, retries) {
+async function synthesizeWithRetry(text, voiceIds, outputFormat, speed, apiKey, retries) {
   let lastErr;
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
-      return synthesizeSingleRequest(text, voiceIds, outputFormat, speed, apiKey);
+      return await synthesizeSingleRequest(text, voiceIds, outputFormat, speed, apiKey);
     } catch (err) {
       lastErr = err;
       if (attempt < retries) {
-        sleepMs(1000 * (attempt + 1));
+        await sleepMs(1000 * (attempt + 1));
       }
     }
   }
@@ -175,7 +177,7 @@ function synthesizeWithRetry(text, voiceIds, outputFormat, speed, apiKey, retrie
 module.exports.default = {
   id: 'kokoro-deepinfra-tts',
   name: 'Kokoro TTS (DeepInfra)',
-  version: '1.0.1',
+  version: '1.0.2',
   description:
     'Kokoro TTS via DeepInfra. State-of-the-art open-source TTS with multi-language voices and speed control. Requires a DeepInfra API key.',
   maxCharsPerRequest: 2000,
@@ -214,7 +216,7 @@ module.exports.default = {
     },
   ],
 
-  getVoices: function () {
+  getVoices: async function () {
     return VOICES.map(function (v) {
       return {
         id: v.id,
@@ -226,7 +228,7 @@ module.exports.default = {
     });
   },
 
-  synthesize: function (text, options) {
+  synthesize: async function (text, options) {
     if (!text || !/\p{L}|\p{N}/u.test(text)) {
       log('SKIP empty/non-speakable text');
       throw new Error('No speakable text');
@@ -243,7 +245,7 @@ module.exports.default = {
 
     log(`synthesize START textLen=${text.length} voices=${voiceIds.join(',')} format=${outputFormat} speed=${speed}`);
 
-    const audio = synthesizeWithRetry(text, voiceIds, outputFormat, speed, apiKey, 2);
+    const audio = await synthesizeWithRetry(text, voiceIds, outputFormat, speed, apiKey, 2);
 
     log(`FINAL audio=${audio.length} bytes`);
     return {

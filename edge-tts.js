@@ -137,10 +137,7 @@ function generateMuid() {
 }
 
 function log(msg) {
-  try {
-    const { NativeModules } = require('react-native');
-    NativeModules.TtsStreamingModule.log('EdgeTTS', msg);
-  } catch {}
+  console.log('[EdgeTTS]', msg);
 }
 
 function uuidv4() {
@@ -151,9 +148,25 @@ function uuidv4() {
 }
 
 function base64ToBytes(base64) {
-  // The LNReader QuickJS runtime provides base64ToArrayBuffer; it has no Buffer or atob.
-  const buffer = base64ToArrayBuffer(base64);
-  return new Uint8Array(buffer);
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+}
+
+function toUint8Array(data) {
+  if (data instanceof ArrayBuffer) {
+    return new Uint8Array(data);
+  }
+  if (typeof data === 'string') {
+    return base64ToBytes(data);
+  }
+  if (data && typeof data.buffer !== 'undefined') {
+    return new Uint8Array(data.buffer);
+  }
+  return new Uint8Array(0);
 }
 
 function getTimestamp() {
@@ -209,6 +222,87 @@ function parseMessage(raw) {
   return { headers, body };
 }
 
+function openWebSocket(url, headers, timeoutMs = 10000) {
+  return new Promise((resolve, reject) => {
+    const ws = new WebSocket(url, undefined, { headers });
+    ws.binaryType = 'arraybuffer';
+
+    const timer = setTimeout(() => {
+      cleanup();
+      ws.close();
+      reject(new Error('WebSocket open timeout'));
+    }, timeoutMs);
+
+    const cleanup = () => {
+      clearTimeout(timer);
+      ws.removeEventListener('open', onOpen);
+      ws.removeEventListener('error', onError);
+    };
+
+    function onOpen() {
+      cleanup();
+      resolve(ws);
+    }
+
+    function onError(event) {
+      cleanup();
+      reject(new Error(`WebSocket error: ${event?.message || 'unknown'}`));
+    }
+
+    ws.addEventListener('open', onOpen);
+    ws.addEventListener('error', onError);
+  });
+}
+
+async function wsReceive(ws, timeoutMs = 30000) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      cleanup();
+      reject(new Error('WebSocket receive timeout'));
+    }, timeoutMs);
+
+    const cleanup = () => {
+      clearTimeout(timer);
+      ws.removeEventListener('message', onMessage);
+      ws.removeEventListener('close', onClose);
+      ws.removeEventListener('error', onError);
+    };
+
+    function onMessage(event) {
+      cleanup();
+      const data = event.data;
+      if (typeof data === 'string') {
+        resolve({ type: 'text', data });
+      } else if (data instanceof ArrayBuffer) {
+        resolve({ type: 'binary', data });
+      } else {
+        resolve({ type: 'message', data });
+      }
+    }
+
+    function onClose(event) {
+      cleanup();
+      resolve({ type: 'close', code: event.code, reason: event.reason });
+    }
+
+    function onError(event) {
+      cleanup();
+      reject(new Error(`WebSocket error: ${event?.message || 'unknown'}`));
+    }
+
+    ws.addEventListener('message', onMessage);
+    ws.addEventListener('close', onClose);
+    ws.addEventListener('error', onError);
+  });
+}
+
+function wsSend(ws, data) {
+  if (ws.readyState !== WebSocket.OPEN) {
+    throw new Error('WebSocket is not open');
+  }
+  ws.send(data);
+}
+
 const DEFAULT_VOICES = [
   { id: 'en-US-AvaNeural', name: 'Ava (US English)', languages: ['en-us'], gender: 'female' },
   { id: 'en-US-AndrewNeural', name: 'Andrew (US English)', languages: ['en-us'], gender: 'male' },
@@ -226,7 +320,7 @@ const DEFAULT_VOICES = [
 module.exports.default = {
   id: 'edge-tts',
   name: 'Edge TTS',
-  version: '1.0.3',
+  version: '1.0.4',
   description:
     'Microsoft Edge TTS using direct WebSocket. No proxy or Docker needed.',
   maxCharsPerRequest: 4000,
@@ -242,11 +336,11 @@ module.exports.default = {
     },
   ],
 
-  getVoices: function () {
+  getVoices: async function () {
     return DEFAULT_VOICES;
   },
 
-  synthesize: function (text, options) {
+  synthesize: async function (text, options) {
     if (!text || !/\p{L}|\p{N}/u.test(text)) {
       throw new Error('No speakable text');
     }
@@ -271,7 +365,7 @@ module.exports.default = {
       `&Sec-MS-GEC=${secMsGec}` +
       `&Sec-MS-GEC-Version=1-${CHROMIUM_VERSION}`;
 
-    const ws = WebSocket(url, {
+    const ws = await openWebSocket(url, {
       'Pragma': 'no-cache',
       'Cache-Control': 'no-cache',
       'Origin': 'chrome-extension://jdiccldimpdaibmpdkjnbmckianbfold',
@@ -285,25 +379,19 @@ module.exports.default = {
       'Cookie': `muid=${generateMuid()};`,
     });
 
-    // Wait for open
-    const openMsg = ws.receive();
-    if (openMsg.type !== 'open') {
-      throw new Error(`Edge TTS connection failed: ${openMsg.type} ${openMsg.data || ''}`);
-    }
-
     // Send config
-    ws.send(buildConfigMessage(outputFormat));
+    wsSend(ws, buildConfigMessage(outputFormat));
 
     // Send SSML
-    ws.send(buildSsmlMessage(text, voice, rate, pitch));
+    wsSend(ws, buildSsmlMessage(text, voice, rate, pitch));
 
     const audioChunks = [];
 
     while (true) {
-      const msg = ws.receive();
+      const msg = await wsReceive(ws, 30000);
 
       if (msg.type === 'binary') {
-        let bytes = base64ToBytes(msg.data);
+        let bytes = toUint8Array(msg.data);
         // Edge TTS binary frames: [2-byte big-endian header length][header]\r\n[audio]
         if (bytes.length >= 2) {
           const headerLen = (bytes[0] << 8) | bytes[1];
@@ -326,11 +414,11 @@ module.exports.default = {
         }
       } else if (msg.type === 'text') {
         const parsed = parseMessage(msg.data);
-        const path = parsed.headers['path'] || '';
-        if (path === 'turn.end') {
+        const messagePath = parsed.headers['path'] || '';
+        if (messagePath === 'turn.end') {
           break;
         }
-        if (path === 'response') {
+        if (messagePath === 'response') {
           try {
             const resp = JSON.parse(parsed.body);
             if (resp?.headers?.['X-RequestId'] && resp?.headers?.['X-StreamId']) {
