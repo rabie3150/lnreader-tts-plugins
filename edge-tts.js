@@ -4,7 +4,7 @@
 const TRUSTED_CLIENT_TOKEN = '6A5AA1D4EAFF4E9FB37E23D68491D6F4';
 const EDGE_TTS_URL = 'wss://speech.platform.bing.com/consumer/speech/synthesize/readaloud/edge/v1';
 const WIN_EPOCH = 11644473600;
-const CHROMIUM_VERSION = '130.0.2849.68';
+const CHROMIUM_VERSION = '143.0.3650.75';
 
 // Minimal SHA-256 implementation for Sec-MS-GEC token generation.
 function sha256(message) {
@@ -124,6 +124,18 @@ function generateSecMsGec() {
   return sha256(`${ticks}${TRUSTED_CLIENT_TOKEN}`);
 }
 
+function generateMuid() {
+  // 16 random bytes → 32 hex chars, uppercased
+  const bytes = new Uint8Array(16);
+  for (let i = 0; i < 16; i++) {
+    bytes[i] = Math.floor(Math.random() * 256);
+  }
+  return Array.from(bytes)
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('')
+    .toUpperCase();
+}
+
 function log(msg) {
   try {
     const { NativeModules } = require('react-native');
@@ -214,7 +226,7 @@ const DEFAULT_VOICES = [
 module.exports.default = {
   id: 'edge-tts',
   name: 'Edge TTS',
-  version: '1.0.2',
+  version: '1.0.3',
   description:
     'Microsoft Edge TTS using direct WebSocket. No proxy or Docker needed.',
   maxCharsPerRequest: 4000,
@@ -267,8 +279,10 @@ module.exports.default = {
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 ' +
         `(KHTML, like Gecko) Chrome/${CHROMIUM_VERSION.split('.')[0]}.0.0.0 Safari/537.36 ` +
         `Edg/${CHROMIUM_VERSION.split('.')[0]}.0.0.0`,
-      'Accept-Encoding': 'gzip, deflate, br',
+      'Accept-Encoding': 'gzip, deflate, br, zstd',
       'Accept-Language': 'en-US,en;q=0.9',
+      'Sec-WebSocket-Version': '13',
+      'Cookie': `muid=${generateMuid()};`,
     });
 
     // Wait for open

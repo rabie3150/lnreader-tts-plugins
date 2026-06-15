@@ -49,8 +49,8 @@ function fixWavHeader(buffer) {
   return buffer;
 }
 
-function fetchToken() {
-  const resp = fetch(PUBLIC_TOKEN_URL, {
+async function fetchToken() {
+  const resp = await fetch(PUBLIC_TOKEN_URL, {
     method: "GET",
     headers: {
       "Accept": "*/*",
@@ -62,7 +62,7 @@ function fetchToken() {
     throw new Error("Failed to fetch Cartesia public token: HTTP " + resp.status);
   }
 
-  const data = resp.json();
+  const data = await resp.json();
   if (!data.token) {
     throw new Error("No token found in Cartesia response");
   }
@@ -73,7 +73,7 @@ function fetchToken() {
 module.exports.default = {
   id: "cartesia-free-tts",
   name: "Cartesia Sonic (Free)",
-  version: "1.0.2",
+  version: "1.0.3",
   description: "Free Cartesia Sonic TTS using public playground tokens. Extremely fast and high quality.",
   maxCharsPerRequest: 3000,
   supportsSpeedControl: true,
@@ -122,7 +122,7 @@ module.exports.default = {
     }
   ],
 
-  getVoices: function () {
+  getVoices: async function () {
     // The /voices endpoint is blocked for public tokens, so we use the curated list.
     return [
       { id: "694f9389-aac1-45b6-b726-9d9369183238", name: "American English", languages: ["en"], gender: "female" },
@@ -135,7 +135,7 @@ module.exports.default = {
     ];
   },
 
-  synthesize: function (text, options) {
+  synthesize: async function (text, options) {
     if (!text || text.trim() === "") {
       throw new Error("Text cannot be empty");
     }
@@ -147,7 +147,7 @@ module.exports.default = {
 
     // We must fetch a fresh token for every request because they expire in 60s
     // and we have no global state to cache them across plugin invocations easily.
-    const token = fetchToken();
+    const token = await fetchToken();
 
     const payload = {
       transcript: text,
@@ -165,7 +165,7 @@ module.exports.default = {
       payload.emotion = [settings.emotion];
     }
 
-    const resp = fetch(API_URL, {
+    const resp = await fetch(API_URL, {
       method: "POST",
       headers: {
         "Cartesia-Version": CARTESIA_VERSION,
@@ -177,11 +177,13 @@ module.exports.default = {
     });
 
     if (!resp.ok) {
-      throw new Error("Cartesia API Error: HTTP " + resp.status + " " + resp.text());
+      const errText = await resp.text();
+      throw new Error("Cartesia API Error: HTTP " + resp.status + " " + errText);
     }
 
+    const audioBuffer = await resp.arrayBuffer();
     return {
-      audioContent: fixWavHeader(resp.arrayBuffer()),
+      audioContent: fixWavHeader(audioBuffer),
       format: "wav",
       sampleRate: 44100
     };
