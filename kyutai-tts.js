@@ -25,10 +25,23 @@ function base64ToBytes(base64) {
   return bytes;
 }
 
-function openWebSocket(url, headers) {
+function formatWsError(event) {
+  if (!event) return 'unknown';
+  const parts = [];
+  if (event.message) parts.push('message=' + event.message);
+  if (event.code) parts.push('code=' + event.code);
+  if (event.reason) parts.push('reason=' + event.reason);
+  return parts.join(' ') || 'unknown';
+}
+
+function openWebSocket(url) {
   return new Promise((resolve, reject) => {
     let openTimer = null;
-    const ws = new WebSocket(url, [], headers ? { headers } : undefined);
+    let lastError = 'unknown';
+    // React Native's WebSocket supports custom headers on Android via the
+    // third options argument, but Kyutai works without them and some RN builds
+    // reject the options object. Keep the constructor simple.
+    const ws = new WebSocket(url);
     ws.binaryType = 'arraybuffer';
     const buffer = [];
     const pending = [];
@@ -43,20 +56,21 @@ function openWebSocket(url, headers) {
 
     ws.onopen = () => {
       clearTimeout(openTimer);
-      ws.onerror = () => pushMessage({ type: 'error', reason: 'WebSocket error' });
+      ws.onerror = event => pushMessage({ type: 'error', reason: formatWsError(event) });
       ws.onclose = () => pushMessage({ type: 'close' });
       resolve(ws);
     };
 
-    ws.onerror = () => {
+    ws.onerror = event => {
+      lastError = formatWsError(event);
       clearTimeout(openTimer);
-      reject(new Error('WebSocket error'));
+      reject(new Error('WebSocket open failed: ' + lastError));
       try { ws.close(); } catch {}
     };
 
-    ws.onclose = () => {
+    ws.onclose = event => {
       clearTimeout(openTimer);
-      reject(new Error('WebSocket closed before open'));
+      reject(new Error('WebSocket closed before open: ' + formatWsError(event)));
     };
 
     ws.onmessage = event => {
@@ -447,7 +461,7 @@ async function synthesizeSingleRequest(text, voiceId, cfgAlpha) {
 
   log('connecting to ' + url);
 
-  const ws = await openWebSocket(url, { Origin: ORIGIN });
+  const ws = await openWebSocket(url);
 
   wsSend(ws, packTextMessage(text));
   wsSend(ws, packEosMessage());
@@ -1141,7 +1155,7 @@ const KYUTAI_VOICES = [
 module.exports.default = {
   id: 'kyutai-tts',
   name: 'Kyutai TTS',
-  version: '1.0.2',
+  version: '1.0.3',
   description: 'Free Kyutai TTS via WebSocket streaming. 200+ voices, no API key required. Returns 24 kHz WAV.',
   maxCharsPerRequest: 5000,
   supportsSpeedControl: false,

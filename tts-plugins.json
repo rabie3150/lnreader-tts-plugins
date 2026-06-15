@@ -52,7 +52,7 @@
     {
       "id": "kyutai-tts",
       "name": "Kyutai TTS",
-      "version": "1.0.2",
+      "version": "1.0.3",
       "description": "Free Kyutai TTS via WebSocket streaming. 200+ voices, no API key required. Returns 24 kHz WAV.",
       "author": "LNReader",
       "url": "kyutai-tts.js"
