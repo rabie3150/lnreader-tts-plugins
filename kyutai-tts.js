@@ -27,6 +27,15 @@ function base64ToBytes(base64) {
 
 function formatWsError(event) {
   if (!event) return 'unknown';
+  try {
+    const keys = [];
+    for (const k in event) {
+      if (Object.prototype.hasOwnProperty.call(event, k)) {
+        keys.push(k + '=' + String(event[k]));
+      }
+    }
+    if (keys.length) return keys.join(' ');
+  } catch {}
   const parts = [];
   if (event.message) parts.push('message=' + event.message);
   if (event.code) parts.push('code=' + event.code);
@@ -449,6 +458,18 @@ function encodeURIComponentShim(str) {
   return result;
 }
 
+async function testPublicEcho() {
+  // Quick sanity check: can this runtime open any wss connection at all?
+  const echoUrl = 'wss://echo.websocket.org/.ws';
+  try {
+    const ws = await openWebSocket(echoUrl);
+    ws.close();
+    return 'echo OK';
+  } catch (e) {
+    return 'echo FAILED: ' + (e?.message || String(e));
+  }
+}
+
 async function synthesizeSingleRequest(text, voiceId, cfgAlpha) {
   const requestId = uuidv4().slice(0, 8);
   const encodedVoice = encodeURIComponentShim(voiceId);
@@ -461,7 +482,14 @@ async function synthesizeSingleRequest(text, voiceId, cfgAlpha) {
 
   log('connecting to ' + url);
 
-  const ws = await openWebSocket(url);
+  let ws;
+  try {
+    ws = await openWebSocket(url);
+  } catch (openErr) {
+    log('Kyutai open failed: ' + (openErr?.message || String(openErr)));
+    log('Testing public echo server: ' + await testPublicEcho());
+    throw openErr;
+  }
 
   wsSend(ws, packTextMessage(text));
   wsSend(ws, packEosMessage());
@@ -1155,7 +1183,7 @@ const KYUTAI_VOICES = [
 module.exports.default = {
   id: 'kyutai-tts',
   name: 'Kyutai TTS',
-  version: '1.0.3',
+  version: '1.0.4',
   description: 'Free Kyutai TTS via WebSocket streaming. 200+ voices, no API key required. Returns 24 kHz WAV.',
   maxCharsPerRequest: 5000,
   supportsSpeedControl: false,
