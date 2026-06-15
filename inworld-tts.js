@@ -1,7 +1,5 @@
-// Inworld AI TTS plugin for LNReader QuickJS runtime.
-// Designed for synchronous execution: fetch(), resp.text(), and resp.json()
-// are blocking. The native orchestrator runs multiple synthesize() calls in
-// parallel (one per chunk), so this plugin only handles a single chunk.
+// Inworld AI TTS plugin for LNReader React Native JS runtime.
+// Runs on the JS thread; the app handles parallel chunk synthesis.
 
 const API_URL = 'https://inworld.ai/api/create-speech';
 const LIST_VOICES_URL = 'https://inworld.ai/api/list-voices';
@@ -14,16 +12,16 @@ function uuidv4() {
 }
 
 function base64ToBytes(base64) {
-  // The LNReader QuickJS runtime provides base64ToArrayBuffer; it has no Buffer or atob.
-  const buffer = base64ToArrayBuffer(base64);
-  return new Uint8Array(buffer);
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
 }
 
-function log(msg) {
-  try {
-    const { NativeModules } = require('react-native');
-    NativeModules.TtsStreamingModule.log('Inworld', msg);
-  } catch {}
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 function preprocessInworldText(text) {
@@ -97,7 +95,7 @@ function combineWavChunks(chunks) {
   return result;
 }
 
-function synthesizeSingleRequest(text, voice, model, speed) {
+async function synthesizeSingleRequest(text, voice, model, speed) {
   const uid = uuidv4();
 
   const payload = {
@@ -114,9 +112,9 @@ function synthesizeSingleRequest(text, voice, model, speed) {
     },
   };
 
-  log(`synthesizeSingleRequest textLen=${text.length} voice=${voice} model=${model} speed=${speed}`);
+  console.log(`Inworld synthesize textLen=${text.length} voice=${voice} model=${model} speed=${speed}`);
 
-  const resp = fetch(API_URL, {
+  const resp = await fetch(API_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -127,17 +125,17 @@ function synthesizeSingleRequest(text, voice, model, speed) {
     body: JSON.stringify(payload),
   });
 
-  log(`RESPONSE status=${resp.status}`);
+  console.log(`Inworld response status=${resp.status}`);
 
   if (!resp.ok) {
-    const errText = resp.text();
-    log(`HTTP ERROR ${resp.status}: ${errText.slice(0, 200)}`);
+    const errText = await resp.text();
+    console.log(`Inworld HTTP ERROR ${resp.status}: ${errText.slice(0, 200)}`);
     throw new Error(`Inworld TTS HTTP ${resp.status}`);
   }
 
-  const bodyText = resp.text();
+  const bodyText = await resp.text();
   const lines = bodyText.split('\n').filter(l => l.trim());
-  log(`NDJSON lines=${lines.length}`);
+  console.log(`Inworld NDJSON lines=${lines.length}`);
 
   const audioChunks = [];
 
@@ -153,7 +151,7 @@ function synthesizeSingleRequest(text, voice, model, speed) {
         audioChunks.push(base64ToBytes(base64Audio));
       }
     } catch (e) {
-      log(`LINE${i} PARSE ERROR: ${e.message || e}`);
+      console.log(`Inworld LINE${i} PARSE ERROR: ${e.message || e}`);
     }
   }
 
@@ -161,7 +159,7 @@ function synthesizeSingleRequest(text, voice, model, speed) {
     throw new Error('Inworld TTS response missing audioContent');
   }
 
-  log(`SUCCESS chunks=${audioChunks.length}`);
+  console.log(`Inworld SUCCESS chunks=${audioChunks.length}`);
 
   if (audioChunks.length === 1) {
     return audioChunks[0];
@@ -169,17 +167,15 @@ function synthesizeSingleRequest(text, voice, model, speed) {
   return combineWavChunks(audioChunks);
 }
 
-function synthesizeWithRetry(text, voice, model, speed, retries) {
+async function synthesizeWithRetry(text, voice, model, speed, retries) {
   let lastErr;
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
-      return synthesizeSingleRequest(text, voice, model, speed);
+      return await synthesizeSingleRequest(text, voice, model, speed);
     } catch (err) {
       lastErr = err;
       if (attempt < retries) {
-        // Synchronous sleep using a busy loop (QuickJS has no setTimeout).
-        const until = Date.now() + 1000 * (attempt + 1);
-        while (Date.now() < until) {}
+        await sleep(1000 * (attempt + 1));
       }
     }
   }
@@ -189,9 +185,9 @@ function synthesizeWithRetry(text, voice, model, speed, retries) {
 module.exports.default = {
   id: 'inworld-tts',
   name: 'Inworld AI TTS',
-  version: '1.1.2',
+  version: '1.1.3',
   description:
-    'Free TTS using Inworld AI. Synthesized on the native IO thread; parallel chunk synthesis is handled by the LNReader TTS engine.',
+    'Free TTS using Inworld AI. Runs in the JS runtime; parallel chunk synthesis is handled by the LNReader TTS engine.',
   maxCharsPerRequest: 900,
   supportsSpeedControl: false,
   estimatedCharsPerSecond: 13,
@@ -211,31 +207,32 @@ module.exports.default = {
     },
   ],
 
-  getVoices: function () {
+  getVoices: async function () {
     try {
       const uid = uuidv4();
-      const resp = fetch(LIST_VOICES_URL, {
+      const resp = await fetch(LIST_VOICES_URL, {
         headers: {
           'Cookie': `inworld_uid=${uid}`,
           'Origin': 'https://inworld.ai',
           'Referer': 'https://inworld.ai/',
         },
       });
-      const data = resp.json();
+      const data = await resp.json();
       return (data.voices || []).map(v => ({
         id: v.voiceId,
         name: v.displayName || v.voiceId,
         languages: (v.languages || ['en']).map(l => l.toLowerCase()),
         description: v.description || '',
       }));
-    } catch {
+    } catch (e) {
+      console.log('Inworld getVoices error:', e?.message || e);
       return [];
     }
   },
 
-  synthesize: function (text, options) {
+  synthesize: async function (text, options) {
     if (!text || !/\p{L}|\p{N}/u.test(text)) {
-      log('SKIP empty/non-speakable text');
+      console.log('Inworld SKIP empty/non-speakable text');
       throw new Error('No speakable text');
     }
 
@@ -244,12 +241,12 @@ module.exports.default = {
     const model = settings.model || 'inworld-tts-1.5-mini';
     const speed = options.speed || 1.0;
 
-    log(`synthesize START textLen=${text.length} voice=${voice} model=${model} speed=${speed}`);
+    console.log(`Inworld synthesize START textLen=${text.length} voice=${voice} model=${model} speed=${speed}`);
 
     const processedText = preprocessInworldText(text);
-    const audio = synthesizeWithRetry(processedText, voice, model, speed, 2);
+    const audio = await synthesizeWithRetry(processedText, voice, model, speed, 2);
 
-    log(`FINAL audio=${audio.length} bytes`);
+    console.log(`Inworld FINAL audio=${audio.length} bytes`);
     return {
       audioContent: audio.buffer,
       format: 'wav',

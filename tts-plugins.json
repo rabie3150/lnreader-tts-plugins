@@ -4,8 +4,8 @@
     {
       "id": "inworld-tts",
       "name": "Inworld AI TTS",
-      "version": "1.1.2",
-      "description": "Free TTS using Inworld AI. Chunks are synthesized in parallel by the LNReader TTS engine.",
+      "version": "1.1.3",
+      "description": "Free TTS using Inworld AI. Runs in the JS runtime; parallel chunk synthesis is handled by the LNReader TTS engine.",
       "author": "LNReader",
       "url": "inworld-tts.js"
     },
