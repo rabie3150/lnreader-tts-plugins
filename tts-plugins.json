@@ -20,7 +20,7 @@
     {
       "id": "cartesia-free-tts",
       "name": "Cartesia Sonic (Free)",
-      "version": "1.0.3",
+      "version": "1.0.4",
       "description": "Free Cartesia Sonic TTS using public playground tokens. Extremely fast and high quality.",
       "author": "LNReader",
       "url": "cartesia-free-tts.js"
@@ -37,7 +37,7 @@
       "id": "kokoro-deepinfra-tts",
       "name": "Kokoro TTS (DeepInfra)",
       "version": "1.0.1",
-      "description": "Kokoro TTS via DeepInfra. State-of-the-art open-source TTS with multi-language voices and speed control. Requires a DeepInfra API key.",
+      "description": "Kokoro TTS via DeepInfra. State-of-the-art open-source TTS with multi-quality voices and speed control. Requires a DeepInfra API key.",
       "author": "LNReader",
       "url": "kokoro-deepinfra-tts.js"
     },
