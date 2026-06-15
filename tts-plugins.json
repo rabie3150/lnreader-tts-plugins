@@ -7,7 +7,10 @@
       "version": "1.1.3",
       "description": "Free TTS using Inworld AI. Runs in the JS runtime; parallel chunk synthesis is handled by the LNReader TTS engine.",
       "author": "LNReader",
-      "url": "inworld-tts.js"
+      "url": "inworld-tts.js",
+      "maxCharsPerRequest": 900,
+      "supportsSpeedControl": false,
+      "estimatedCharsPerSecond": 13
     },
     {
       "id": "edge-tts",
@@ -15,7 +18,10 @@
       "version": "1.0.4",
       "description": "Microsoft Edge TTS using a direct WebSocket connection. No proxy or Docker needed.",
       "author": "LNReader",
-      "url": "edge-tts.js"
+      "url": "edge-tts.js",
+      "maxCharsPerRequest": 4000,
+      "supportsSpeedControl": true,
+      "estimatedCharsPerSecond": 25
     },
     {
       "id": "cartesia-free-tts",
@@ -23,7 +29,10 @@
       "version": "1.0.4",
       "description": "Free Cartesia Sonic TTS using public playground tokens. Extremely fast and high quality.",
       "author": "LNReader",
-      "url": "cartesia-free-tts.js"
+      "url": "cartesia-free-tts.js",
+      "maxCharsPerRequest": 3000,
+      "supportsSpeedControl": false,
+      "estimatedCharsPerSecond": 18
     },
     {
       "id": "elevenlabs-tts",
@@ -31,7 +40,10 @@
       "version": "1.0.1",
       "description": "Premium ElevenLabs TTS supporting API-key authenticated mode and hCaptcha anonymous mode. Returns MP3 audio.",
       "author": "LNReader",
-      "url": "elevenlabs-tts.js"
+      "url": "elevenlabs-tts.js",
+      "maxCharsPerRequest": 5000,
+      "supportsSpeedControl": true,
+      "estimatedCharsPerSecond": 18
     },
     {
       "id": "kokoro-deepinfra-tts",
@@ -39,7 +51,10 @@
       "version": "1.0.2",
       "description": "Kokoro TTS via DeepInfra. State-of-the-art open-source TTS with multi-quality voices and speed control. Requires a DeepInfra API key.",
       "author": "LNReader",
-      "url": "kokoro-deepinfra-tts.js"
+      "url": "kokoro-deepinfra-tts.js",
+      "maxCharsPerRequest": 2000,
+      "supportsSpeedControl": true,
+      "estimatedCharsPerSecond": 15
     },
     {
       "id": "murf-tts",
@@ -47,7 +62,10 @@
       "version": "1.0.2",
       "description": "Free Murf.ai anonymous TTS with high-fidelity studio voices. No API key required.",
       "author": "LNReader",
-      "url": "murf-tts.js"
+      "url": "murf-tts.js",
+      "maxCharsPerRequest": 2000,
+      "supportsSpeedControl": false,
+      "estimatedCharsPerSecond": 18
     },
     {
       "id": "kyutai-tts",
@@ -55,7 +73,10 @@
       "version": "1.0.4",
       "description": "Free Kyutai TTS via WebSocket streaming. 200+ voices, no API key required. Returns 24 kHz WAV.",
       "author": "LNReader",
-      "url": "kyutai-tts.js"
+      "url": "kyutai-tts.js",
+      "maxCharsPerRequest": 5000,
+      "supportsSpeedControl": false,
+      "estimatedCharsPerSecond": 18
     }
   ]
 }
