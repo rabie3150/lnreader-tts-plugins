@@ -24,7 +24,10 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function preprocessInworldText(text) {
+function preprocessInworldText(text, model) {
+  if (model !== 'inworld-tts-2') {
+    return text;
+  }
   return text.replace(/\[([^\[\]]+)\]/g, (match, content) => {
     const trimmed = content.trim();
     if (!trimmed) return match;
@@ -243,7 +246,7 @@ module.exports.default = {
 
     console.log(`Inworld synthesize START textLen=${text.length} voice=${voice} model=${model} speed=${speed}`);
 
-    const processedText = preprocessInworldText(text);
+    const processedText = preprocessInworldText(text, model);
     const audio = await synthesizeWithRetry(processedText, voice, model, speed, 2);
 
     console.log(`Inworld FINAL audio=${audio.length} bytes`);
