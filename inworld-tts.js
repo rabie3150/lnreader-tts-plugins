@@ -24,17 +24,6 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function preprocessInworldText(text, model) {
-  if (model !== 'inworld-tts-2') {
-    return text;
-  }
-  return text.replace(/\[([^\[\]]+)\]/g, (match, content) => {
-    const trimmed = content.trim();
-    if (!trimmed) return match;
-    return `[in a robotic system tone] ${trimmed} [in narration tone]`;
-  });
-}
-
 function isValidWavHeader(bytes) {
   return (
     bytes.length >= 44 &&
@@ -188,7 +177,7 @@ async function synthesizeWithRetry(text, voice, model, speed, retries) {
 module.exports.default = {
   id: 'inworld-tts',
   name: 'Inworld AI TTS',
-  version: '1.1.3',
+  version: '1.1.4',
   description:
     'Free TTS using Inworld AI. Runs in the JS runtime; parallel chunk synthesis is handled by the LNReader TTS engine.',
   maxCharsPerRequest: 900,
@@ -246,8 +235,7 @@ module.exports.default = {
 
     console.log(`Inworld synthesize START textLen=${text.length} voice=${voice} model=${model} speed=${speed}`);
 
-    const processedText = preprocessInworldText(text, model);
-    const audio = await synthesizeWithRetry(processedText, voice, model, speed, 2);
+    const audio = await synthesizeWithRetry(text, voice, model, speed, 2);
 
     console.log(`Inworld FINAL audio=${audio.length} bytes`);
     return {
