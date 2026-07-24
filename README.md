@@ -18,6 +18,30 @@ dispatches chunks in parallel (up to 3 concurrent requests), so performance
 remains doze-resistant even though each request is synchronous inside the
 plugin.
 
+### Inworld AI TTS (Experimental Steering)
+
+Experimental fork of Inworld AI TTS focused on `inworld-tts-2` steering tags for novel narration.
+
+- **File:** `inworld-tts-experimental.js`
+- **Max chars:** 900 per request
+- **Speed control:** No
+- **Audio format:** WAV, 24 kHz
+
+Each steering feature has its own toggle so you can test what works best for your source:
+
+| Toggle | Effect |
+|--------|--------|
+| Enable steering preprocessing | Master on/off switch (only affects `inworld-tts-2`). |
+| Preserve existing `[steering tags]` | Leaves real steering tags alone; wraps other bracketed text as announcements. |
+| Convert `*sigh*` / `*laugh*` to tags | Turns inline sound cues into Inworld non-verbal tags. |
+| Steer italics / asterisks | `*text*` → hushed thought; `**text**` → forceful emphasis. |
+| Steer ALL CAPS shouting | Wraps consecutive all-caps words with force/volume tags. |
+| Steer by punctuation | Adds emotion tags for `!?`, `...`, or `!!!` on the first sentence of a chunk. |
+| Steer quoted dialogue | Infers tone from text inside `"quotes"` (disabled by default; can be aggressive). |
+| Reset tone at chunk end | Appends `[in narration tone]` so style does not carry into the next chunk. |
+
+> **Note:** Steering tags consume characters from the 900-char budget. Keep only the toggles you actually need for cleaner output and fewer chunk splits.
+
 ### Edge TTS
 
 Microsoft Edge TTS using a direct WebSocket connection to Microsoft's speech

@@ -13,6 +13,17 @@
       "estimatedCharsPerSecond": 13
     },
     {
+      "id": "inworld-tts-experimental",
+      "name": "Inworld AI TTS (Experimental Steering)",
+      "version": "1.2.0-exp.1",
+      "description": "Experimental Inworld AI TTS build with per-feature toggles for inworld-tts-2 steering tags. Test italics, shouting, punctuation, dialogue, and non-verbal cues.",
+      "author": "LNReader",
+      "url": "inworld-tts-experimental.js",
+      "maxCharsPerRequest": 900,
+      "supportsSpeedControl": false,
+      "estimatedCharsPerSecond": 13
+    },
+    {
       "id": "edge-tts",
       "name": "Edge TTS",
       "version": "1.0.4",
