@@ -235,6 +235,7 @@ async function synthesizeSingleRequest(text, voice, model, speed) {
       'Cookie': `inworld_uid=${uid}`,
       'Origin': 'https://inworld.ai',
       'Referer': 'https://inworld.ai/',
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
     },
     body: JSON.stringify(payload),
   });
@@ -299,7 +300,7 @@ async function synthesizeWithRetry(text, voice, model, speed, retries) {
 module.exports.default = {
   id: 'inworld-tts-experimental',
   name: 'Inworld AI TTS (Experimental Steering)',
-  version: '1.2.0-exp.1',
+  version: '1.2.0-exp.2',
   description:
     'Experimental Inworld AI TTS build with per-feature toggles for inworld-tts-2 steering tags. Test italics, shouting, punctuation, dialogue, and non-verbal cues.',
   maxCharsPerRequest: 900,
@@ -390,6 +391,7 @@ module.exports.default = {
           'Cookie': `inworld_uid=${uid}`,
           'Origin': 'https://inworld.ai',
           'Referer': 'https://inworld.ai/',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
         },
       });
       const data = await resp.json();

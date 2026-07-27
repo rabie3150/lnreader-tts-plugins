@@ -113,6 +113,7 @@ async function synthesizeSingleRequest(text, voice, model, speed) {
       'Cookie': `inworld_uid=${uid}`,
       'Origin': 'https://inworld.ai',
       'Referer': 'https://inworld.ai/',
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
     },
     body: JSON.stringify(payload),
   });
@@ -177,7 +178,7 @@ async function synthesizeWithRetry(text, voice, model, speed, retries) {
 module.exports.default = {
   id: 'inworld-tts',
   name: 'Inworld AI TTS',
-  version: '1.1.4',
+  version: '1.1.5',
   description:
     'Free TTS using Inworld AI. Runs in the JS runtime; parallel chunk synthesis is handled by the LNReader TTS engine.',
   maxCharsPerRequest: 900,
@@ -207,6 +208,7 @@ module.exports.default = {
           'Cookie': `inworld_uid=${uid}`,
           'Origin': 'https://inworld.ai',
           'Referer': 'https://inworld.ai/',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
         },
       });
       const data = await resp.json();
