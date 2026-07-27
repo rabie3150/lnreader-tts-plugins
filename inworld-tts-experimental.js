@@ -216,6 +216,7 @@ async function synthesizeSingleRequest(text, voice, model, speed) {
     text,
     voiceId: voice,
     modelId: model,
+    deliveryMode: 'CREATIVE',
     temperature: 1.0,
     applyTextNormalization: 'ON',
     timestampType: 'TIMESTAMP_TYPE_UNSPECIFIED',
@@ -300,7 +301,7 @@ async function synthesizeWithRetry(text, voice, model, speed, retries) {
 module.exports.default = {
   id: 'inworld-tts-experimental',
   name: 'Inworld AI TTS (Experimental Steering)',
-  version: '1.2.0-exp.2',
+  version: '1.2.0-exp.3',
   description:
     'Experimental Inworld AI TTS build with per-feature toggles for inworld-tts-2 steering tags. Test italics, shouting, punctuation, dialogue, and non-verbal cues.',
   maxCharsPerRequest: 900,

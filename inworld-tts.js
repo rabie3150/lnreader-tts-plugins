@@ -94,6 +94,7 @@ async function synthesizeSingleRequest(text, voice, model, speed) {
     text,
     voiceId: voice,
     modelId: model,
+    deliveryMode: 'CREATIVE',
     temperature: 1.0,
     applyTextNormalization: 'ON',
     timestampType: 'TIMESTAMP_TYPE_UNSPECIFIED',
@@ -178,7 +179,7 @@ async function synthesizeWithRetry(text, voice, model, speed, retries) {
 module.exports.default = {
   id: 'inworld-tts',
   name: 'Inworld AI TTS',
-  version: '1.1.5',
+  version: '1.1.6',
   description:
     'Free TTS using Inworld AI. Runs in the JS runtime; parallel chunk synthesis is handled by the LNReader TTS engine.',
   maxCharsPerRequest: 900,
