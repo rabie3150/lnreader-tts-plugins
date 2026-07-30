@@ -44,46 +44,18 @@ function getWavFmtParams(bytes) {
   };
 }
 
-function combineWavChunks(chunks) {
-  const validChunks = chunks.filter(isValidWavHeader);
-  if (validChunks.length === 0) {
-    throw new Error('No valid WAV chunks to combine');
+function combineMp3Chunks(chunks) {
+  // MP3 is a streaming format; concatenating chunks is safe.
+  let totalLength = 0;
+  for (const chunk of chunks) {
+    totalLength += chunk.length;
   }
-  if (validChunks.length === 1) {
-    return validChunks[0];
+  const result = new Uint8Array(totalLength);
+  let offset = 0;
+  for (const chunk of chunks) {
+    result.set(chunk, offset);
+    offset += chunk.length;
   }
-
-  const refFmt = getWavFmtParams(validChunks[0]);
-  for (let i = 1; i < validChunks.length; i++) {
-    const fmt = getWavFmtParams(validChunks[i]);
-    if (
-      fmt.audioFormat !== refFmt.audioFormat ||
-      fmt.numChannels !== refFmt.numChannels ||
-      fmt.sampleRate !== refFmt.sampleRate ||
-      fmt.bitsPerSample !== refFmt.bitsPerSample
-    ) {
-      throw new Error(`WAV chunk ${i} fmt mismatch`);
-    }
-  }
-
-  const header = new Uint8Array(validChunks[0].slice(0, 44));
-  let pcmLength = 0;
-  for (const chunk of validChunks) {
-    pcmLength += chunk.length - 44;
-  }
-
-  const view = new DataView(header.buffer, header.byteOffset);
-  view.setUint32(4, 36 + pcmLength, true);
-  view.setUint32(40, pcmLength, true);
-
-  const result = new Uint8Array(44 + pcmLength);
-  result.set(header, 0);
-  let offset = 44;
-  for (const chunk of validChunks) {
-    result.set(chunk.slice(44), offset);
-    offset += chunk.length - 44;
-  }
-
   return result;
 }
 
@@ -95,12 +67,9 @@ async function synthesizeSingleRequest(text, voice, model, speed) {
     voiceId: voice,
     modelId: model,
     deliveryMode: 'CREATIVE',
-    temperature: 1.0,
-    applyTextNormalization: 'ON',
-    timestampType: 'TIMESTAMP_TYPE_UNSPECIFIED',
     audioConfig: {
-      audioEncoding: 'LINEAR16',
-      sampleRateHertz: 24000,
+      audioEncoding: 'MP3',
+      sampleRateHertz: 48000,
       speakingRate: speed,
     },
   };
@@ -158,7 +127,7 @@ async function synthesizeSingleRequest(text, voice, model, speed) {
   if (audioChunks.length === 1) {
     return audioChunks[0];
   }
-  return combineWavChunks(audioChunks);
+  return combineMp3Chunks(audioChunks);
 }
 
 async function synthesizeWithRetry(text, voice, model, speed, retries) {
@@ -179,9 +148,9 @@ async function synthesizeWithRetry(text, voice, model, speed, retries) {
 module.exports.default = {
   id: 'inworld-tts',
   name: 'Inworld AI TTS',
-  version: '1.1.6',
+  version: '1.2.0',
   description:
-    'Free TTS using Inworld AI. Runs in the JS runtime; parallel chunk synthesis is handled by the LNReader TTS engine.',
+    'Free TTS using Inworld AI. Returns MP3 audio at 48 kHz. Runs in the JS runtime; parallel chunk synthesis is handled by the LNReader TTS engine.',
   maxCharsPerRequest: 900,
   supportsSpeedControl: false,
   estimatedCharsPerSecond: 13,
@@ -191,12 +160,12 @@ module.exports.default = {
       key: 'model',
       type: 'select',
       label: 'Model',
-      defaultValue: 'inworld-tts-1.5-mini',
+      defaultValue: 'inworld-tts-2',
       options: [
-        { label: '1.5 mini (fastest streaming)', value: 'inworld-tts-1.5-mini' },
-        { label: '1.5 max (best quality)', value: 'inworld-tts-1.5-max' },
+        { label: 'Inworld TTS 2 (MP3)', value: 'inworld-tts-2' },
         { label: 'Inworld TTS 1', value: 'inworld-tts-1' },
-        { label: 'Inworld TTS 2', value: 'inworld-tts-2' },
+        { label: '1.5 mini (streaming)', value: 'inworld-tts-1.5-mini' },
+        { label: '1.5 max (streaming)', value: 'inworld-tts-1.5-max' },
       ],
     },
   ],
@@ -232,8 +201,8 @@ module.exports.default = {
     }
 
     const settings = (options && options.pluginSettings) || {};
-    const voice = options.voiceId || settings.voice || 'Elliot';
-    const model = settings.model || 'inworld-tts-1.5-mini';
+    const voice = options.voiceId || settings.voice || 'Sarah';
+    const model = settings.model || 'inworld-tts-2';
     const speed = options.speed || 1.0;
 
     console.log(`Inworld synthesize START textLen=${text.length} voice=${voice} model=${model} speed=${speed}`);
@@ -243,8 +212,8 @@ module.exports.default = {
     console.log(`Inworld FINAL audio=${audio.length} bytes`);
     return {
       audioContent: audio.buffer,
-      format: 'wav',
-      sampleRate: 24000,
+      format: 'mp3',
+      sampleRate: 48000,
     };
   },
 };

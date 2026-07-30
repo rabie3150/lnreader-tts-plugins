@@ -11,7 +11,7 @@ Free cloud TTS that works out of the box.
 - **File:** `inworld-tts.js`
 - **Max chars:** 900 per request
 - **Speed control:** No
-- **Audio format:** WAV, 24 kHz
+- **Audio format:** MP3, 48 kHz
 
 The plugin runs inside LNReader's QuickJS runtime. The native TTS engine
 dispatches chunks in parallel (up to 3 concurrent requests), so performance
@@ -25,7 +25,7 @@ Experimental fork of Inworld AI TTS focused on `inworld-tts-2` steering tags for
 - **File:** `inworld-tts-experimental.js`
 - **Max chars:** 900 per request
 - **Speed control:** No
-- **Audio format:** WAV, 24 kHz
+- **Audio format:** MP3, 48 kHz
 
 Each steering feature has its own toggle so you can test what works best for your source:
 
