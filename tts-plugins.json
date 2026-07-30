@@ -4,7 +4,7 @@
     {
       "id": "inworld-tts",
       "name": "Inworld AI TTS",
-      "version": "1.2.0",
+      "version": "1.2.1",
       "description": "Free TTS using Inworld AI. Returns MP3 audio at 48 kHz. Runs in the JS runtime; parallel chunk synthesis is handled by the LNReader TTS engine.",
       "author": "LNReader",
       "url": "inworld-tts.js",
@@ -15,7 +15,7 @@
     {
       "id": "inworld-tts-experimental",
       "name": "Inworld AI TTS (Experimental Steering)",
-      "version": "1.3.0-exp.1",
+      "version": "1.3.0-exp.2",
       "description": "Experimental Inworld AI TTS build with per-feature toggles for inworld-tts-2 steering tags. Returns MP3 audio at 48 kHz.",
       "author": "LNReader",
       "url": "inworld-tts-experimental.js",

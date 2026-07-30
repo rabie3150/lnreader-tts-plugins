@@ -201,10 +201,12 @@ async function synthesizeSingleRequest(text, voice, model, speed) {
   const resp = await fetch(API_URL, {
     method: 'POST',
     headers: {
+      'accept': '*/*',
+      'accept-language': 'en-US,en;q=0.9',
       'Content-Type': 'application/json',
       'Cookie': `inworld_uid=${uid}`,
       'Origin': 'https://inworld.ai',
-      'Referer': 'https://inworld.ai/',
+      'Referer': 'https://inworld.ai/tts',
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
     },
     body: JSON.stringify(payload),
@@ -270,7 +272,7 @@ async function synthesizeWithRetry(text, voice, model, speed, retries) {
 module.exports.default = {
   id: 'inworld-tts-experimental',
   name: 'Inworld AI TTS (Experimental Steering)',
-  version: '1.3.0-exp.1',
+  version: '1.3.0-exp.2',
   description:
     'Experimental Inworld AI TTS build with per-feature toggles for inworld-tts-2 steering tags. Returns MP3 audio at 48 kHz.',
   maxCharsPerRequest: 900,
@@ -358,9 +360,11 @@ module.exports.default = {
       const uid = uuidv4();
       const resp = await fetch(LIST_VOICES_URL, {
         headers: {
+          'accept': '*/*',
+          'accept-language': 'en-US,en;q=0.9',
           'Cookie': `inworld_uid=${uid}`,
           'Origin': 'https://inworld.ai',
-          'Referer': 'https://inworld.ai/',
+          'Referer': 'https://inworld.ai/tts',
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
         },
       });
