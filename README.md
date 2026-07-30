@@ -103,6 +103,16 @@ Free Kyutai TTS via WebSocket streaming. Features 200+ voices across expressive,
 - **Audio format:** WAV, 24 kHz
 - **Auth:** None
 
+### Fish Audio TTS
+
+Fish Audio TTS using the official API. Fast, high-quality voices with support for emotion/steering tags.
+
+- **File:** `fish-audio-tts.js`
+- **Max chars:** 3000 per request
+- **Speed control:** Yes
+- **Audio format:** MP3, 44.1 kHz
+- **Auth:** Requires a Fish Audio API key
+
 ## Adding this repo to LNReader
 
 1. Go to **Settings → TTS → Plugin Sources**.

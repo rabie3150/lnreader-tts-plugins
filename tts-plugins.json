@@ -88,6 +88,17 @@
       "maxCharsPerRequest": 5000,
       "supportsSpeedControl": false,
       "estimatedCharsPerSecond": 18
+    },
+    {
+      "id": "fish-audio-tts",
+      "name": "Fish Audio TTS",
+      "version": "1.0.0",
+      "description": "Fish Audio TTS using the official API. Requires a Fish Audio API key. Returns MP3 audio at 44.1 kHz.",
+      "author": "LNReader",
+      "url": "fish-audio-tts.js",
+      "maxCharsPerRequest": 3000,
+      "supportsSpeedControl": true,
+      "estimatedCharsPerSecond": 18
     }
   ]
 }
