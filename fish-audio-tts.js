@@ -51,6 +51,9 @@ async function synthesizeSingleRequest(text, voice, model, speed, apiKey) {
   if (!resp.ok) {
     const errText = await resp.text();
     console.log(`FishAudio HTTP ERROR ${resp.status}: ${errText.slice(0, 200)}`);
+    if (resp.status === 401) {
+      throw new Error('Fish Audio API key is invalid or expired. Update it in plugin settings.');
+    }
     throw new Error(`Fish Audio TTS HTTP ${resp.status}: ${errText.slice(0, 100)}`);
   }
 
@@ -77,7 +80,7 @@ async function synthesizeWithRetry(text, voice, model, speed, apiKey, retries) {
 module.exports.default = {
   id: 'fish-audio-tts',
   name: 'Fish Audio TTS',
-  version: '1.0.0',
+  version: '1.0.1',
   description:
     'Fish Audio TTS using the official API. Requires a Fish Audio API key. Returns MP3 audio at 44.1 kHz.',
   maxCharsPerRequest: 3000,
