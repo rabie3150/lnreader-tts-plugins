@@ -23,6 +23,7 @@ There is **no application code, no build system, and no dependency manifest** (n
 | `kokoro-deepinfra-tts.js` | `kokoro-deepinfra-tts` | 1.0.2 | Kokoro via DeepInfra, requires API key, voice blending |
 | `murf-tts.js` | `murf-tts` | 1.0.2 | Free anonymous Murf.ai, MP3 44.1 kHz |
 | `kyutai-tts.js` | `kyutai-tts` | 1.0.4 | Free Kyutai via WebSocket streaming, 200+ voices, WAV 24 kHz |
+| `aivocal-tts.js` | `aivocal-tts` | 1.0.0 | Free anonymous AIVocal.io, 30 Kokoro voices + emotion, WAV 24 kHz, fresh UUID cookie per chunk bypasses the 1-synthesis-per-ID quota |
 
 ## Runtime architecture
 

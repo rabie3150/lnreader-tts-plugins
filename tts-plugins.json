@@ -99,6 +99,17 @@
       "maxCharsPerRequest": 3000,
       "supportsSpeedControl": true,
       "estimatedCharsPerSecond": 18
+    },
+    {
+      "id": "aivocal-tts",
+      "name": "AIVocal TTS (Free)",
+      "version": "1.0.0",
+      "description": "Free anonymous AIVocal.io TTS with 30 Kokoro voices and emotion control. No API key required. Returns WAV audio at 24 kHz.",
+      "author": "LNReader",
+      "url": "aivocal-tts.js",
+      "maxCharsPerRequest": 3000,
+      "supportsSpeedControl": true,
+      "estimatedCharsPerSecond": 15
     }
   ]
 }

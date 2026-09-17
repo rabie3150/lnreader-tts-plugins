@@ -113,6 +113,18 @@ Fish Audio TTS using the official API. Fast, high-quality voices with support fo
 - **Audio format:** MP3, 44.1 kHz
 - **Auth:** Requires a Fish Audio API key
 
+### AIVocal TTS (Free)
+
+Free anonymous AIVocal.io TTS using the web-playground endpoint. 30 Kokoro voices (US/GB English, French, Hindi, Italian) with emotion control (calm, happy, sad, angry, fearful, disgusted, surprised).
+
+- **File:** `aivocal-tts.js`
+- **Max chars:** 3000 per request
+- **Speed control:** Yes
+- **Audio format:** WAV, 24 kHz
+- **Auth:** None
+
+The free quota is keyed on an `anonymous_user_id` cookie (not your IP), so the plugin generates a fresh anonymous ID per chunk — usage is effectively unlimited.
+
 ## Adding this repo to LNReader
 
 1. Go to **Settings → TTS → Plugin Sources**.
