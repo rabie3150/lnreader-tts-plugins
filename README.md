@@ -125,6 +125,131 @@ Free anonymous AIVocal.io TTS using the web-playground endpoint. 30 Kokoro voice
 
 The free quota is keyed on an `anonymous_user_id` cookie (not your IP), so the plugin generates a fresh anonymous ID per chunk — usage is effectively unlimited.
 
+### TTSMP3 (Amazon Polly)
+
+Free Amazon Polly TTS via `ttsmp3.com` featuring 60+ natural voices across 20+ languages. No API key or sign-up required.
+
+- **File:** `ttsmp3-tts.js`
+- **Max chars:** 1000 per request
+- **Speed control:** No
+- **Audio format:** MP3, 24 kHz
+- **Auth:** None
+
+Provides instant access to popular Amazon Polly voices (Matthew, Joanna, Brian, Amy, Hans, Celine, Ricardo, etc.).
+
+### TikTok TTS (Free)
+
+Free TikTok viral TTS via `lazypy.ro` featuring 110+ character, narrator, and multilingual voices. No API key required.
+
+- **File:** `tiktok-tts.js`
+- **Max chars:** 300 per request
+- **Speed control:** No
+- **Audio format:** MP3, 24 kHz
+- **Auth:** None
+
+Includes iconic TikTok voices such as Story Teller, Professor, Jessie, Ghostface, C-3PO, Rocket Raccoon, and singing voices.
+
+### Sound of Text (Google)
+
+Free Google Translate TTS via `api.soundoftext.com` covering 60+ language accents. No API key required.
+
+- **File:** `soundoftext-tts.js`
+- **Max chars:** 100 per request
+- **Speed control:** No
+- **Audio format:** MP3, 24 kHz
+- **Auth:** None
+
+### ResponsiveVoice TTS
+
+Free multilingual speech synthesis via `code.responsivevoice.org` covering 75+ natural voices in 40+ languages. Zero sign-up, no login or custom API key needed.
+
+- **File:** `responsivevoice-tts.js`
+- **Max chars:** 1000 per request
+- **Speed control:** Yes (configurable pitch and rate multipliers)
+- **Audio format:** MP3, 24 kHz
+- **Auth:** None
+
+Provides instant access to global voice models across English, Spanish, French, German, Japanese, Chinese, Arabic, Russian, and more.
+
+### Readloud TTS
+
+Free Amazon Polly / Ivona TTS via `readloud.net` featuring 40 natural voices across 18 languages. No API key or account required.
+
+- **File:** `readloud-tts.js`
+- **Max chars:** 2000 per request
+- **Speed control:** Yes (speed & pitch range adjustments)
+- **Audio format:** MP3, 24 kHz
+- **Auth:** None
+
+Supports standard Amazon Polly and Ivona narrators (Eric, Brian, Ivy, Joey, Sally, Justin, Jennifer, etc.) with long-text capacity.
+
+### FreeTTS (Neural)
+
+Free neural TTS via `freetts.ai` powered by Microsoft Edge / Azure neural voices. Includes 320+ voices across 70+ languages. Zero sign-up, no API key required.
+
+- **File:** `freetts-tts.js`
+- **Max chars:** 1000 per request
+- **Speed control:** Yes (configurable speed multipliers from 0.5x to 2.0x)
+- **Audio format:** MP3, 24 kHz
+- **Auth:** None
+
+Direct JSON REST endpoint returning audio binary without WebSocket complexity.
+
+### Ondoku TTS
+
+Free multilingual speech synthesis via `ondoku3.com` featuring 690+ neural voices across 70+ languages. Zero sign-up, no login required for up to 1,000 characters per conversion.
+
+- **File:** `ondoku-tts.js`
+- **Max chars:** 1000 per request
+- **Speed control:** Yes (speed & pitch adjustments)
+- **Audio format:** MP3, 24 kHz
+- **Auth:** None
+
+Accesses global Azure and GCP neural voices with automatic session token handling and Google Cloud Storage audio streaming.
+
+### Moe TTS (Anime & Genshin)
+
+Free anime character speech synthesis powered by VITS via the `skytnt/moe-tts` Hugging Face Space. Features 260+ gaming and anime characters including Genshin Impact and Honkai series. No API key or sign-up required.
+
+- **File:** `moe-tts.js`
+- **Max chars:** 300 per request
+- **Speed control:** Yes (configurable speed multipliers from 0.5x to 2.0x)
+- **Audio format:** WAV, 24 kHz
+- **Auth:** None
+
+Direct Gradio 4 SSE protocol client with automatic server-side URL normalization.
+
+### Kokoro TTS (Free 82M)
+
+Free open-weight neural TTS powered by Hexgrad's Kokoro-82M model running on a dedicated CPU Hugging Face Space (`RobinsAIWorld/Kokoro-TTS-cpu`). Delivers human-like prosody with 28 American and British voices without requiring API keys, login, or ZeroGPU session limits.
+
+- **File:** `kokoro-free-tts.js`
+- **Max chars:** 500 per request
+- **Speed control:** Yes (configurable speed multipliers from 0.5x to 2.0x)
+- **Audio format:** WAV, 24 kHz
+- **Auth:** None
+
+### Umamusume VITS (Anime & Game)
+
+Free anime character speech synthesis powered by VITS via the `Plachta/VITS-Umamusume-voice-synthesizer` Hugging Face Space running on CPU. Features 147 expressive voices from Umamusume Pretty Derby supporting English, Japanese, and Chinese narration modes.
+
+- **File:** `umamusume-tts.js`
+- **Max chars:** 300 per request
+- **Speed control:** Yes (configurable speed multipliers from 0.5x to 2.0x)
+- **Audio format:** WAV, 22.05 kHz
+- **Auth:** None
+
+### Coqui VITS (Multilingual)
+
+Free open-source multilingual neural speech synthesis powered by Coqui VITS via `mbarnig/lb_de_fr_en_pt_COQUI_VITS_TTS` running on CPU. Features 8 distinct voices supporting English, German, French, Portuguese, and Luxembourgish.
+
+- **File:** `coqui-vits-tts.js`
+- **Max chars:** 500 per request
+- **Speed control:** No
+- **Audio format:** WAV, 22.05 kHz
+- **Auth:** None
+
+
 ## Adding this repo to LNReader
 
 1. Go to **Settings → TTS → Plugin Sources**.

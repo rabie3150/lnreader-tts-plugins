@@ -24,6 +24,9 @@ There is **no application code, no build system, and no dependency manifest** (n
 | `murf-tts.js` | `murf-tts` | 1.0.2 | Free anonymous Murf.ai, MP3 44.1 kHz |
 | `kyutai-tts.js` | `kyutai-tts` | 1.0.4 | Free Kyutai via WebSocket streaming, 200+ voices, WAV 24 kHz |
 | `aivocal-tts.js` | `aivocal-tts` | 1.0.0 | Free anonymous AIVocal.io, 30 Kokoro voices + emotion, WAV 24 kHz, fresh UUID cookie per chunk bypasses the 1-synthesis-per-ID quota |
+| `ttsmp3-tts.js` | `ttsmp3-tts` | 1.0.0 | Free Amazon Polly TTS via ttsmp3.com, MP3 24 kHz, 60+ voices, 1000 chars/request |
+| `tiktok-tts.js` | `tiktok-tts` | 1.0.0 | Free TikTok TTS via lazypy.ro, MP3 24 kHz, 110+ character & multilingual voices, 300 chars/request |
+| `soundoftext-tts.js` | `soundoftext-tts` | 1.0.0 | Free Google Translate TTS via api.soundoftext.com, MP3 24 kHz, 60+ language accents, 100 chars/request |
 
 ## Runtime architecture
 

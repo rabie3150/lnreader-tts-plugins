@@ -110,6 +110,127 @@
       "maxCharsPerRequest": 3000,
       "supportsSpeedControl": true,
       "estimatedCharsPerSecond": 15
+    },
+    {
+      "id": "ttsmp3-tts",
+      "name": "TTSMP3 (Amazon Polly)",
+      "version": "1.0.0",
+      "description": "Free Amazon Polly TTS via ttsmp3.com with 60+ natural voices across 20+ languages. No API key required. Returns MP3 audio.",
+      "author": "LNReader",
+      "url": "ttsmp3-tts.js",
+      "maxCharsPerRequest": 1000,
+      "supportsSpeedControl": false,
+      "estimatedCharsPerSecond": 20
+    },
+    {
+      "id": "tiktok-tts",
+      "name": "TikTok TTS (Free)",
+      "version": "1.0.0",
+      "description": "Free TikTok TTS with 110+ character, narrator, and multilingual voices. No API key required. Returns MP3 audio.",
+      "author": "LNReader",
+      "url": "tiktok-tts.js",
+      "maxCharsPerRequest": 300,
+      "supportsSpeedControl": false,
+      "estimatedCharsPerSecond": 22
+    },
+    {
+      "id": "soundoftext-tts",
+      "name": "Sound of Text (Google)",
+      "version": "1.0.0",
+      "description": "Free Google Translate TTS via api.soundoftext.com with 60+ language accents. No API key required. Returns MP3 audio.",
+      "author": "LNReader",
+      "url": "soundoftext-tts.js",
+      "maxCharsPerRequest": 100,
+      "supportsSpeedControl": false,
+      "estimatedCharsPerSecond": 20
+    },
+    {
+      "id": "responsivevoice-tts",
+      "name": "ResponsiveVoice TTS",
+      "version": "1.0.0",
+      "description": "Free multilingual TTS using ResponsiveVoice without login. Supports 75+ voices across 40+ languages. Returns MP3 audio.",
+      "author": "LNReader",
+      "url": "responsivevoice-tts.js",
+      "maxCharsPerRequest": 1000,
+      "supportsSpeedControl": true,
+      "estimatedCharsPerSecond": 18
+    },
+    {
+      "id": "readloud-tts",
+      "name": "Readloud TTS",
+      "version": "1.0.0",
+      "description": "Free Amazon Polly / Ivona TTS via readloud.net with 40 voices across 18 languages. No API key required. Returns MP3 audio.",
+      "author": "LNReader",
+      "url": "readloud-tts.js",
+      "maxCharsPerRequest": 2000,
+      "supportsSpeedControl": true,
+      "estimatedCharsPerSecond": 18
+    },
+    {
+      "id": "freetts-tts",
+      "name": "FreeTTS (Neural)",
+      "version": "1.0.0",
+      "description": "Free neural TTS via freetts.ai featuring 320+ Microsoft Edge neural voices across 70+ languages. No API key required. Returns MP3 audio.",
+      "author": "LNReader",
+      "url": "freetts-tts.js",
+      "maxCharsPerRequest": 1000,
+      "supportsSpeedControl": true,
+      "estimatedCharsPerSecond": 22
+    },
+    {
+      "id": "ondoku-tts",
+      "name": "Ondoku TTS",
+      "version": "1.0.0",
+      "description": "Free multilingual TTS using Ondoku without login. Supports 690+ voices across 70+ languages. Returns MP3 audio.",
+      "author": "LNReader",
+      "url": "ondoku-tts.js",
+      "maxCharsPerRequest": 1000,
+      "supportsSpeedControl": true,
+      "estimatedCharsPerSecond": 18
+    },
+    {
+      "id": "moe-tts",
+      "name": "Moe TTS (Anime & Genshin)",
+      "version": "1.0.0",
+      "description": "Free anime & gaming character TTS via Moe-TTS Hugging Face space. Features 260+ voices (Genshin Impact, Honkai, Anime). Returns WAV audio.",
+      "author": "LNReader",
+      "url": "moe-tts.js",
+      "maxCharsPerRequest": 300,
+      "supportsSpeedControl": true,
+      "estimatedCharsPerSecond": 15
+    },
+    {
+      "id": "kokoro-free-tts",
+      "name": "Kokoro TTS (Free 82M)",
+      "version": "1.0.0",
+      "description": "Free open-weight neural TTS (Kokoro-82M) via Hugging Face Space. High-quality human-like prosody with 28 expressive American & British voices. Returns WAV audio.",
+      "author": "LNReader",
+      "url": "kokoro-free-tts.js",
+      "maxCharsPerRequest": 500,
+      "supportsSpeedControl": true,
+      "estimatedCharsPerSecond": 20
+    },
+    {
+      "id": "umamusume-tts",
+      "name": "Umamusume VITS (Anime & Game)",
+      "version": "1.0.0",
+      "description": "Free anime & game character TTS (Umamusume Pretty Derby VITS) via Hugging Face Space. Features 147 expressive voices supporting English, Japanese, and Chinese. Returns WAV audio.",
+      "author": "LNReader",
+      "url": "umamusume-tts.js",
+      "maxCharsPerRequest": 300,
+      "supportsSpeedControl": true,
+      "estimatedCharsPerSecond": 15
+    },
+    {
+      "id": "coqui-vits-tts",
+      "name": "Coqui VITS (Multilingual)",
+      "version": "1.0.0",
+      "description": "Free multilingual neural TTS (Coqui VITS) via Hugging Face Space. Features 8 speakers supporting English, German, French, Portuguese, and Luxembourgish. Returns WAV audio.",
+      "author": "LNReader",
+      "url": "coqui-vits-tts.js",
+      "maxCharsPerRequest": 500,
+      "supportsSpeedControl": false,
+      "estimatedCharsPerSecond": 18
     }
   ]
 }
