@@ -231,6 +231,39 @@
       "maxCharsPerRequest": 500,
       "supportsSpeedControl": false,
       "estimatedCharsPerSecond": 18
+    },
+    {
+      "id": "styletts2-tts",
+      "name": "StyleTTS 2 (Free)",
+      "version": "1.0.0",
+      "description": "Free open-weight neural TTS (StyleTTS 2) via Hugging Face Space. Diffusion-based human-like prosody with 8 expressive US voices and 19 languages. Returns WAV audio.",
+      "author": "LNReader",
+      "url": "styletts2-tts.js",
+      "maxCharsPerRequest": 500,
+      "supportsSpeedControl": false,
+      "estimatedCharsPerSecond": 18
+    },
+    {
+      "id": "chattts-tts",
+      "name": "ChatTTS (Free Conversational)",
+      "version": "1.0.0",
+      "description": "Free open-weight conversational neural TTS (2Noise ChatTTS) via Hugging Face Space. Unmatched conversational prosody, natural cadence, and expressive speech. Returns WAV audio.",
+      "author": "LNReader",
+      "url": "chattts-tts.js",
+      "maxCharsPerRequest": 400,
+      "supportsSpeedControl": false,
+      "estimatedCharsPerSecond": 10
+    },
+    {
+      "id": "voxworker-tts",
+      "name": "VoxWorker TTS (Free)",
+      "version": "1.0.0",
+      "description": "Free multi-engine speech synthesis (RHVoice & Yandex SpeechKit Pro neural models) via VoxWorker. High reliability, natural voices in English, Russian, and Ukrainian. Returns MP3 audio.",
+      "author": "LNReader",
+      "url": "voxworker-tts.js",
+      "maxCharsPerRequest": 1000,
+      "supportsSpeedControl": true,
+      "estimatedCharsPerSecond": 25
     }
   ]
-}
+}

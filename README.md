@@ -249,8 +249,43 @@ Free open-source multilingual neural speech synthesis powered by Coqui VITS via 
 - **Audio format:** WAV, 22.05 kHz
 - **Auth:** None
 
+### StyleTTS 2 (Free)
+
+Free open-weight neural TTS using StyleTTS 2 via the `Pendrokar/style-tts-2` Hugging Face Space running on CPU. Employs style diffusion and adversarial training with large speech language models for human-level prosody and expressive pacing.
+
+- **File:** `styletts2-tts.js`
+- **Max chars:** 500 per request
+- **Speed control:** No (Diffusion steps configurable)
+- **Audio format:** WAV, 24 kHz
+- **Voices:** 8 expressive US voices (`f-us-1`..`4`, `m-us-1`..`4`) across 19 languages
+- **Auth:** None
+
+### ChatTTS (Free Conversational)
+
+Free conversational speech model powered by 2Noise ChatTTS via `rainnee/ChatTTS` on CPU. Renowned on AI TTS leaderboards for unmatched conversational prosody, natural laughter, subtle breaths, and realistic storytelling cadence.
+
+- **File:** `chattts-tts.js`
+- **Max chars:** 400 per request
+- **Speed control:** No (Temperature control supported)
+- **Audio format:** WAV, 24 kHz
+- **Voices:** 8 curated speaker seeds (Conversational, Storyteller, Friendly, Casual, Narrative)
+- **Auth:** None
+
+### VoxWorker TTS (Free)
+
+Multi-engine speech synthesis aggregator featuring open-source RHVoice and Yandex SpeechKit Pro neural models via VoxWorker. High reliability, zero sign-up, and clean studio audio.
+
+- **File:** `voxworker-tts.js`
+- **Max chars:** 1000 per request
+- **Speed control:** Yes (0.8x to 1.5x)
+- **Pitch control:** Yes (-0.5 to +0.5)
+- **Audio format:** MP3, 24 kHz
+- **Voices:** 17 voices across English, Russian, and Ukrainian
+- **Auth:** None
+
 
 ## Adding this repo to LNReader
+
 
 1. Go to **Settings → TTS → Plugin Sources**.
 2. Tap **+**.
