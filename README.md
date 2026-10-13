@@ -283,8 +283,31 @@ Multi-engine speech synthesis aggregator featuring open-source RHVoice and Yande
 - **Voices:** 17 voices across English, Russian, and Ukrainian
 - **Auth:** None
 
+### MeloTTS (Free Multilingual)
+
+Free open-weights multilingual neural speech synthesis powered by MyShell MeloTTS via `sumittechmero/MeloTTS` on CPU. Ultra-fast inference with natural regional accents across English, Spanish, French, Chinese, Japanese, and Korean.
+
+- **File:** `melotts-free-tts.js`
+- **Max chars:** 500 per request
+- **Speed control:** Yes (0.8x to 1.5x)
+- **Audio format:** WAV, 44.1 kHz
+- **Voices:** 10 voices (American, British, Australian, Indian, Spanish, French, Chinese, Japanese, Korean)
+- **Auth:** None
+
+### Fish Audio (Free 44.1kHz)
+
+Free open-weights neural speech synthesis powered by Fish Audio (Fish Speech) via `pineconeT94/Fish-Speech` on CPU. High-fidelity dual-autoregressive architecture delivering studio-quality acoustics.
+
+- **File:** `fish-speech-free-tts.js`
+- **Max chars:** 500 per request
+- **Speed control:** No (Expressiveness temperature configurable)
+- **Audio format:** WAV, 44.1 kHz
+- **Voices:** 8 expressive speaker seeds (Neutral, Storyteller, Conversational, Dynamic, Deep Resonance, Articulate, Friendly, Dramatic)
+- **Auth:** None
+
 
 ## Adding this repo to LNReader
+
 
 
 1. Go to **Settings → TTS → Plugin Sources**.

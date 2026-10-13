@@ -264,6 +264,29 @@
       "maxCharsPerRequest": 1000,
       "supportsSpeedControl": true,
       "estimatedCharsPerSecond": 25
+    },
+    {
+      "id": "melotts-free-tts",
+      "name": "MeloTTS (Free Multilingual)",
+      "version": "1.0.0",
+      "description": "Free open-weight multilingual neural TTS (MyShell MeloTTS) via Hugging Face Space. Rapid synthesis with natural accents in English, Spanish, French, Chinese, Japanese, and Korean. Returns 44.1 kHz WAV.",
+      "author": "LNReader",
+      "url": "melotts-free-tts.js",
+      "maxCharsPerRequest": 500,
+      "supportsSpeedControl": true,
+      "estimatedCharsPerSecond": 25
+    },
+    {
+      "id": "fish-speech-free-tts",
+      "name": "Fish Audio (Free 44.1kHz)",
+      "version": "1.0.0",
+      "description": "Free open-weight neural TTS (Fish Audio / Fish Speech) via Hugging Face Space. High-fidelity dual-transformer architecture with 8 expressive voice seeds. Returns 44.1 kHz WAV.",
+      "author": "LNReader",
+      "url": "fish-speech-free-tts.js",
+      "maxCharsPerRequest": 500,
+      "supportsSpeedControl": false,
+      "estimatedCharsPerSecond": 15
     }
   ]
-}
+}
+
